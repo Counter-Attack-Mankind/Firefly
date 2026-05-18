@@ -39,15 +39,15 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 	 */
 	src: {
 		// 桌面背景图片（支持单张或多张随机）
-		// desktop: "assets/images/DesktopWallpaper/d1.avif",
-		desktop: [
-			"assets/images/DesktopWallpaper/d1.avif",
-			"assets/images/DesktopWallpaper/d2.avif",
-			"assets/images/DesktopWallpaper/d3.avif",
-			"assets/images/DesktopWallpaper/d4.avif",
-			"assets/images/DesktopWallpaper/d5.avif",
-			"assets/images/DesktopWallpaper/d6.avif",
-		],
+		 desktop: "assets/images/DesktopWallpaper/d7.avif",
+		//desktop: [
+		//	"assets/images/DesktopWallpaper/d1.avif",
+		//	"assets/images/DesktopWallpaper/d2.avif",
+		//	"assets/images/DesktopWallpaper/d3.avif",
+		//	"assets/images/DesktopWallpaper/d4.avif",
+		//	"assets/images/DesktopWallpaper/d5.avif",
+		//	"assets/images/DesktopWallpaper/d6.avif",
+		//],
 		// 移动背景图片（支持单张或多张随机）
 		// mobile: "assets/images/MobileWallpaper/m1.avif",
 		mobile: [
@@ -70,7 +70,7 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 			// 是否允许用户通过控制面板切换横幅标题显示
 			switchable: true,
 			// 主页横幅主标题
-			title: "Lovely firefly!",
+			title: "欢迎来到我的小小世界！",
 			// 主页横幅主标题字体大小
 			titleSize: "3.8rem",
 			// 主页横幅副标题
@@ -92,9 +92,9 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 				// 打字速度（毫秒）
 				speed: 100,
 				// 删除速度（毫秒）
-				deleteSpeed: 50,
+				deleteSpeed: 100,
 				// 完全显示后的暂停时间（毫秒）
-				pauseTime: 2000,
+				pauseTime: 4000,
 			},
 		},
 		// 导航栏配置
