@@ -34,15 +34,16 @@ function renderLeaderboard(entries) {
   if (!leaderboardListEl) {
     return;
   }
-  if (!entries || entries.length === 0) {
+  const topEntries = (entries || []).slice(0, 10);
+  if (topEntries.length === 0) {
     leaderboardListEl.innerHTML = '<li class="leaderboard-empty">还没有分数，来拿第一个第一名。</li>';
     return;
   }
-  leaderboardListEl.innerHTML = entries
-    .map((entry) => {
+  leaderboardListEl.innerHTML = topEntries
+    .map((entry, index) => {
       const name = sanitizePlayerName(entry.name);
       const score = Number(entry.score || 0).toLocaleString();
-      return `<li><span class="leaderboard-row"><span>${name}</span><span class="leaderboard-score">${score}</span></span></li>`;
+      return `<li><span class="leaderboard-row"><span class="leaderboard-rank">${index + 1}</span><span class="leaderboard-name">${name}</span><span class="leaderboard-score">${score}</span></span></li>`;
     })
     .join("");
 }

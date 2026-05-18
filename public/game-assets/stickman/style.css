@@ -30,11 +30,13 @@ body {
   width: 960px;
   max-width: 100%;
   margin-bottom: 12px;
-  padding: 12px;
-  border: 1px solid rgba(17, 24, 39, 0.14);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(236, 246, 255, 0.82)),
+    radial-gradient(circle at 0 0, rgba(37, 99, 235, 0.12), transparent 34%);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
 }
 
 .leaderboard-header {
@@ -42,8 +44,24 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 8px;
-  font-size: 15px;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.leaderboard-header strong {
+  color: #0f172a;
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.leaderboard-header span {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .leaderboard-header label {
@@ -57,10 +75,10 @@ body {
 #playerName {
   width: 136px;
   height: 30px;
-  border: 1px solid rgba(15, 23, 42, 0.18);
-  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 9px;
   padding: 0 10px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.92);
   color: #111827;
   outline: none;
 }
@@ -72,27 +90,72 @@ body {
 
 .leaderboard-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 14px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
   margin: 0;
-  padding-left: 22px;
+  padding: 0;
+  list-style: none;
   color: #1f2937;
   font-size: 14px;
 }
 
 .leaderboard-list li {
-  padding-right: 4px;
+  min-width: 0;
 }
 
 .leaderboard-row {
+  min-height: 42px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.leaderboard-rank {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.leaderboard-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .leaderboard-score {
+  flex: 0 0 auto;
   font-weight: 700;
   color: #111827;
+}
+
+.leaderboard-list li:nth-child(1) .leaderboard-rank {
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  color: #422006;
+}
+
+.leaderboard-list li:nth-child(2) .leaderboard-rank {
+  background: linear-gradient(135deg, #e5e7eb, #94a3b8);
+  color: #111827;
+}
+
+.leaderboard-list li:nth-child(3) .leaderboard-rank {
+  background: linear-gradient(135deg, #fdba74, #c2410c);
+  color: #431407;
 }
 
 .leaderboard-empty,
@@ -104,6 +167,27 @@ body {
   min-height: 18px;
   margin-top: 6px;
   font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .leaderboard-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .leaderboard-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .leaderboard-list {
+    grid-template-columns: 1fr;
+  }
+
+  #playerName {
+    width: min(220px, 70vw);
+  }
 }
 
 #gameCanvas {
