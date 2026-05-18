@@ -18,6 +18,9 @@ function loop(timestamp) {
   state.lastTime = timestamp;
 
   update(deltaMs);
+  if (typeof leaderboardTrackGameOver === "function") {
+    leaderboardTrackGameOver();
+  }
   draw();
   requestAnimationFrame(loop);
 }

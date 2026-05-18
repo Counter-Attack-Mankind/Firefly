@@ -1,8 +1,14 @@
 name = "firefly"
-compatibility_date = "2026-5-18" # 更为今日
+main = "./src/worker.ts"
+compatibility_date = "2026-05-18" # 今日
 
 [assets]
 directory = "./dist"
 
 [vars]
 NODE_VERSION = "22"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "firefly-stickman-leaderboard"
+database_id = "5190a2ea-9212-4391-aba5-e6048904b3d2"

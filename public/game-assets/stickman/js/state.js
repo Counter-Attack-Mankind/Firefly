@@ -37,7 +37,8 @@
   cannonInterval: 14000,
   cannonCountUnder1000: 0,
   nextCannonHigh: false,
-  nextPetScore: petSpawnEveryScore
+  nextPetScore: petSpawnEveryScore,
+  scoreSubmitted: false
 
 };
 

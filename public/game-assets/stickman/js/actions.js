@@ -5,6 +5,10 @@
   state.speed = 6.6;
   state.prevSpeed = 6.6;
   state.score = 0;
+  state.scoreSubmitted = false;
+  if (typeof leaderboardResetRun === "function") {
+    leaderboardResetRun();
+  }
   state.obstacleTimer = 0;
   state.obstacleInterval = 1060;
   state.powerupTimer = 0;

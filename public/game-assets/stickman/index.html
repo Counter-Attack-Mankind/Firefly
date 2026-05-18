@@ -11,6 +11,19 @@
       <div>火柴人2D跑酷</div>
       <div id="score">分数: 0 | 最高分: 0</div>
     </div>
+    <section class="leaderboard" aria-label="排行榜">
+      <div class="leaderboard-header">
+        <strong>排行榜</strong>
+        <label>
+          昵称
+          <input id="playerName" maxlength="16" placeholder="路过的玩家" />
+        </label>
+      </div>
+      <ol id="leaderboardList" class="leaderboard-list">
+        <li class="leaderboard-empty">排行榜加载中...</li>
+      </ol>
+      <div id="leaderboardStatus" class="leaderboard-status"></div>
+    </section>
     <canvas id="gameCanvas" width="960" height="420"></canvas>
     <div class="tips">
       空格 / ↑ / 点击跳跃（支持二段跳），↓ 可空中速降/地面下铲，躲避长横梁障碍（必须下铲）
@@ -24,6 +37,7 @@
     <script src="./js/effects.js"></script>
     <script src="./js/update.js"></script>
     <script src="./js/render.js"></script>
+    <script src="./js/leaderboard.js"></script>
     <script src="./js/app.js"></script>
   </body>
 </html>
