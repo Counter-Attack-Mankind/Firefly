@@ -1,6 +1,7 @@
 ﻿function resetGame() {
   state.started = true;
   state.running = true;
+  state.paused = false;
   state.lastTime = 0;
   state.speed = 6.6;
   state.prevSpeed = 6.6;
@@ -77,7 +78,7 @@ function activateShield() {
 }
 
 function jump() {
-  if (!state.running || player.jumpsUsed >= maxJumps) {
+  if (!state.running || state.paused || player.jumpsUsed >= maxJumps) {
     return;
   }
   const doubleJump = player.jumpsUsed === 1;

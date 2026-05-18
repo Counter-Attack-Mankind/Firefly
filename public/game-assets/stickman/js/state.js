@@ -1,6 +1,7 @@
 ﻿const state = {
   started: false,
   running: false,
+  paused: false,
   speed: 6.6,
   prevSpeed: 6.6,
   score: 0,

@@ -906,6 +906,20 @@ function drawStartScreen() {
   ctx.fillText("空格 / ↑ 跳跃，↓ 下铲或速降，R 重新开始", canvas.width / 2, canvas.height / 2 + 58);
 }
 
+function drawPauseScreen() {
+  if (!state.paused || !state.started || !state.running) {
+    return;
+  }
+  ctx.fillStyle = "rgba(15, 23, 42, 0.34)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#fff";
+  ctx.textAlign = "center";
+  ctx.font = "bold 44px Microsoft YaHei";
+  ctx.fillText("已暂停", canvas.width / 2, canvas.height / 2 - 10);
+  ctx.font = "20px Microsoft YaHei";
+  ctx.fillText("点击右下角播放按钮继续", canvas.width / 2, canvas.height / 2 + 36);
+}
+
 function drawSceneTransition() {
   if (state.sceneTunnelVisible) {
     const x = state.sceneTunnelX;
@@ -998,6 +1012,7 @@ state.sparks.forEach(s => {
   drawPlayer();
   drawPets();
   drawSceneTransition();
+  drawPauseScreen();
   drawStartScreen();
   drawGameOver();
 }

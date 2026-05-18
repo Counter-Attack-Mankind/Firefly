@@ -10,6 +10,30 @@
   scoreEl.textContent = `分数: ${score} | 最高分: ${state.highScore}${sceneText}${shieldText}${petText}`;
 }
 
+function updatePauseButton() {
+  const pauseButton = document.getElementById("pauseButton");
+  if (!pauseButton) {
+    return;
+  }
+  const canPause = state.started && state.running;
+  pauseButton.hidden = !canPause;
+  pauseButton.setAttribute("aria-label", state.paused ? "继续游戏" : "暂停游戏");
+  pauseButton.setAttribute("title", state.paused ? "继续游戏" : "暂停游戏");
+  pauseButton.innerHTML = state.paused
+    ? '<span class="pause-icon pause-icon-play" aria-hidden="true"></span>'
+    : '<span class="pause-icon pause-icon-pause" aria-hidden="true"></span>';
+}
+
+function togglePause() {
+  if (!state.started || !state.running) {
+    return;
+  }
+  state.paused = !state.paused;
+  state.downPressed = false;
+  state.lastTime = 0;
+  updatePauseButton();
+}
+
 function loop(timestamp) {
   if (!state.lastTime) {
     state.lastTime = timestamp;
@@ -17,7 +41,9 @@ function loop(timestamp) {
   const deltaMs = timestamp - state.lastTime;
   state.lastTime = timestamp;
 
-  update(deltaMs);
+  if (!state.paused) {
+    update(deltaMs);
+  }
   if (state.started && !state.running) {
     releaseGamePageLock();
   }
@@ -25,6 +51,7 @@ function loop(timestamp) {
     leaderboardTrackGameOver();
   }
   draw();
+  updatePauseButton();
   requestAnimationFrame(loop);
 }
 
@@ -43,7 +70,10 @@ function releaseGamePageLock() {
     return;
   }
   state.lockReleasedForRun = true;
-  window.parent?.postMessage({ type: "stickman:game-over" }, window.location.origin);
+  window.parent?.postMessage(
+    { type: "stickman:game-over", score: Math.floor(state.score) },
+    window.location.origin
+  );
 }
 
 function buildHeadMaskFromBackground() {
@@ -259,30 +289,55 @@ function handleJumpInput() {
     startGame();
     return;
   }
+  if (state.paused) {
+    return;
+  }
   unlockAudio();
   jump();
 }
 
 window.addEventListener("keydown", (e) => {
+  const target = e.target;
+  if (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target?.isContentEditable
+  ) {
+    return;
+  }
   if (!state.started) {
     e.preventDefault();
     startGame();
     return;
   }
-  if (e.code === "Space" || e.code === "ArrowUp") {
+  if (e.key.toLowerCase() === "p") {
+    e.preventDefault();
+    togglePause();
+    return;
+  }
+  if (e.key.toLowerCase() === "r") {
+    e.preventDefault();
+    unlockAudio();
+    playStartSound();
+    resetGame();
+    return;
+  }
+  if (state.paused) {
+    e.preventDefault();
+    return;
+  }
+  if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") {
     e.preventDefault();
     handleJumpInput();
-  } else if (e.code === "ArrowDown") {
+  } else if (e.code === "ArrowDown" || e.code === "KeyS") {
+    e.preventDefault();
     state.downPressed = true;
-  } else if (e.key.toLowerCase() === "r") {
-    unlockAudio();
-    playStartSound(); 
-    resetGame();
   }
 });
 
 window.addEventListener("keyup", (e) => {
-  if (e.code === "ArrowDown") {
+  if (e.code === "ArrowDown" || e.code === "KeyS") {
+    e.preventDefault();
     state.downPressed = false;
   }
 });
@@ -292,7 +347,16 @@ canvas.addEventListener("pointerdown", () => {
     startGame();
     return;
   }
+  if (state.paused) {
+    return;
+  }
   handleJumpInput();
+});
+
+document.getElementById("pauseButton")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  togglePause();
 });
 
 headImage.addEventListener("load", () => {
@@ -305,4 +369,5 @@ headImage.addEventListener("error", () => {
 
 state.nextSceneIndex = pickNextSceneIndex(state.sceneIndex);
 updateScore();
+updatePauseButton();
 requestAnimationFrame(loop);

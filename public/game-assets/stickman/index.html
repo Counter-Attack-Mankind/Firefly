@@ -7,29 +7,23 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <div class="hud">
-      <div>火柴人2D跑酷</div>
-      <div id="score">分数: 0 | 最高分: 0</div>
-    </div>
-    <section class="leaderboard" aria-label="排行榜">
-      <div class="leaderboard-header">
-        <div>
-          <strong>排行榜</strong>
-          <span>Top 10</span>
-        </div>
-        <label>
-          昵称
-          <input id="playerName" maxlength="16" placeholder="路过的玩家" />
-        </label>
+    <div class="game-stage">
+      <canvas id="gameCanvas" width="960" height="420"></canvas>
+      <div class="hud">
+        <div id="score">分数: 0 | 最高分: 0</div>
       </div>
-      <ol id="leaderboardList" class="leaderboard-list">
-        <li class="leaderboard-empty">排行榜加载中...</li>
-      </ol>
-      <div id="leaderboardStatus" class="leaderboard-status"></div>
-    </section>
-    <canvas id="gameCanvas" width="960" height="420"></canvas>
+      <button
+        id="pauseButton"
+        class="pause-button"
+        type="button"
+        aria-label="暂停游戏"
+        title="暂停游戏"
+      >
+        <span class="pause-icon pause-icon-pause" aria-hidden="true"></span>
+      </button>
+    </div>
     <div class="tips">
-      空格 / ↑ / 点击跳跃（支持二段跳），↓ 可空中速降/地面下铲，躲避长横梁障碍（必须下铲）
+      空格 / W / ↑ / 点击跳跃（支持二段跳），S / ↓ 可空中速降/地面下铲，躲避长横梁障碍（必须下铲）
     </div>
     <script src="./js/config.js"></script>
     <script src="./js/storage.js"></script>

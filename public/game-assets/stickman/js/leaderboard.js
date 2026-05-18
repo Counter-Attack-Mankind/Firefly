@@ -16,7 +16,8 @@ function sanitizePlayerName(name) {
 }
 
 function getPlayerName() {
-  const name = sanitizePlayerName(playerNameEl?.value);
+  const storedName = localStorage.getItem(leaderboardNameKey) || "";
+  const name = sanitizePlayerName(playerNameEl?.value || storedName);
   if (playerNameEl) {
     playerNameEl.value = name;
   }
@@ -31,6 +32,10 @@ function setLeaderboardStatus(text) {
 }
 
 function renderLeaderboard(entries) {
+  window.parent?.postMessage(
+    { type: "stickman:leaderboard", entries: (entries || []).slice(0, 10) },
+    window.location.origin
+  );
   if (!leaderboardListEl) {
     return;
   }
