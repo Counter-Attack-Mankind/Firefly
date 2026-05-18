@@ -1,0 +1,530 @@
+﻿function getSafeDistance() {
+  // 玩家反应时间（秒）
+  const reactionTime = 0.9;
+  const dynamicDist = state.speed * reactionTime * 60;
+
+  return Math.max(lowbarCliffMinDistance, dynamicDist);
+}
+
+function addObstacle() {
+  if (state.sceneWorldFrozen) {
+    return;
+  }
+  const r = Math.random();
+  const spawnX = getObstacleSpawnX();
+  if (r < 0.24) {
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      const x = getObstacleSpawnX();
+      const w = 88 + Math.random() * 34;
+      const y = -220 - Math.random() * 80;
+      const bottomY = groundY - (42 + Math.random() * 4);
+      const h = bottomY - y;
+      if (isNearTunnelRange(x, x + w)) continue;
+      if (hasCliffNearRange(x, x + w, getSafeDistance())) continue;
+      if (hasJumpObstacleNearRange(x, x + w, lowbarJumpMinDistance)) continue;
+      addPlannedObstacle({ type: "lowbar", x, y, w, h });
+      return;
+    }
+  }
+  addJumpObstacleForScene(spawnX);
+}
+
+function getObstacleSpawnX() {
+  return canvas.width + obstacleSpawnLeadMin + Math.random() * obstacleSpawnLeadRange;
+}
+
+function addPlannedObstacle(obstacle) {
+  obstacles.push(obstacle);
+  planCoinsForObstacle(obstacle);
+}
+
+function addJumpObstacleForScene(spawnX) {
+  if (state.sceneWorldFrozen || isNearTunnelRange(spawnX, spawnX + 80)) {
+    return;
+  }
+  const theme = getCurrentSceneTheme();
+  let w;
+  let h;
+
+  if (theme.obstacleType === "pillar") {
+    h = 52 + Math.random() * 58;
+    w = 18 + Math.random() * 12;
+  } else if (theme.obstacleType === "block") {
+    h = 34 + Math.random() * 42;
+    w = 30 + Math.random() * 22;
+  } else {
+    h = 34 + Math.random() * 30;
+    w = 42 + Math.random() * 26;
+  }
+
+  if (hasLowbarNearRange(spawnX, spawnX + w, lowbarJumpMinDistance)) {
+    return;
+  }
+  if (hasCliffNearRange(spawnX, spawnX + w, collectibleCliffPadding + 30)) {
+    return;
+  }
+
+  addPlannedObstacle({
+    type: theme.obstacleType,
+    x: spawnX,
+    y: groundY + 1 - h,
+    w,
+    h
+  });
+}
+function addCannonball() {
+  const spawnX = canvas.width + 200;
+
+  const lowY = groundY - 18;
+  const highY = groundY - 120;
+
+  const wantHigh = state.nextCannonHigh;
+
+  let y = wantHigh ? highY : lowY;
+
+  // 如果原计划是低炮弹，但附近有 lowbar，就强制改成高炮弹
+  if (!wantHigh && hasLowbarNearX(spawnX, 260)) {
+    y = highY;
+  }
+
+  cannonballs.push({
+    x: spawnX,
+    y,
+    r: 14,
+    speed: state.speed + 10,
+    spawnTime: performance.now(),
+    warning: true
+  });
+
+  playCannonWarningSound();
+
+  // 高低炮弹交替
+  state.nextCannonHigh = !state.nextCannonHigh;
+}
+
+function addCliff() {
+  if (state.sceneWorldFrozen) {
+    return;
+  }
+  // 悬崖：地面缺口，必须跳跃跨过；否则会“掉落失败”。
+  const w = 90 + Math.random() * 110;
+  for (let attempt = 0; attempt < 18; attempt += 1) {
+    const x = canvas.width + 220 + Math.random() * 220;
+    if (isNearTunnelRange(x, x + w)) continue;
+    if (hasLowbarNearRange(x, x + w, getSafeDistance())) continue;
+    if (hasJumpObstacleNearRange(x, x + w, collectibleCliffPadding + 80)) continue;
+    
+    cliffs.push({ x, w });
+    return;
+  }
+}
+
+function isNearTunnelRange(startX, endX) {
+  if (!state.sceneTunnelVisible && state.sceneTransitionPhase === "none") {
+    return false;
+  }
+  const left = state.sceneTunnelX - sceneTunnelClearRadius;
+  const right = state.sceneTunnelX + sceneTunnelWidth + sceneTunnelClearRadius;
+  return endX > left && startX < right;
+}
+
+function addShieldPowerup() {
+  const w = 28;
+  const h = 28;
+  // 生成点尽量靠右，并尝试避开当前障碍物与悬崖空洞
+  for (let attempt = 0; attempt < 24; attempt += 1) {
+    const x = canvas.width + 170 + Math.random() * 240; // 顶点偏右，减少与障碍“同时生成重叠”
+    const y = groundY - 76 - Math.random() * 104; // 悬浮高度
+    if (!canSpawnCollectibleRect(x, y, w, h, 36)) continue;
+    if (isRectTooCloseToPets(x, y, w, h, 80)) continue;
+    powerups.push({ type: "shield", x, y, w, h });
+    return;
+  }
+}
+
+function isRectTooCloseToPets(x, y, w, h, padding = 0) {
+  for (const p of pets) {
+    if (p.type !== "pickup") continue;
+    if (rectsOverlap(x - padding, y - padding, w + padding * 2, h + padding * 2, p.x, p.y, p.w, p.h)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isRectTooCloseToPowerups(x, y, w, h, padding = 0) {
+  for (const p of powerups) {
+    if (rectsOverlap(x - padding, y - padding, w + padding * 2, h + padding * 2, p.x, p.y, p.w, p.h)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isRectTooCloseToObstacles(x, y, w, h, extraPadding = 0) {
+  for (const o of obstacles) {
+    let padding = 20;
+
+    if (o.type === "lowbar") padding = 36;   // 滑铲空间要更大
+    if (o.type === "pillar") padding = 28;
+    if (o.type === "spike") padding = 18;
+    padding = Math.max(0, padding + extraPadding);
+
+    if (
+      rectsOverlap(
+        x - padding,
+        y - padding,
+        w + padding * 2,
+        h + padding * 2,
+        o.x,
+        o.y,
+        o.w,
+        o.h
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function addCoin() {
+  const r = 10;
+  const jumpPair = findObstacleGapForCoins();
+  const nearestSlide = findNextLowbar();
+  if (nearestSlide && (!jumpPair || nearestSlide.x < jumpPair[0].x)) {
+    if (tryAddCoinPattern(buildSlideCoinLine(r, nearestSlide), r)) {
+      return;
+    }
+  }
+  if (jumpPair) {
+    const addedArc = tryAddCoinPattern(buildJumpCoinArc(r, jumpPair[0]), r);
+    const addedLine = tryAddCoinPattern(buildBetweenObstacleCoinLine(r, jumpPair), r);
+    if (addedArc || addedLine) {
+      return;
+    }
+  }
+
+  const builders = [
+    buildBetweenObstacleCoinLine,
+    buildJumpCoinArc
+  ];
+
+  for (const build of builders) {
+    const points = build(r);
+    if (tryAddCoinPattern(points, r)) {
+      return;
+    }
+  }
+}
+
+function planCoinsForObstacle(obstacle) {
+  const r = 10;
+
+  if (obstacle.type === "lowbar") {
+    tryAddCoinPattern(buildSlideCoinLine(r, obstacle), r, true);
+    return;
+  }
+
+  tryAddCoinPattern(buildJumpCoinArc(r, obstacle), r, true);
+
+  const pair = findPreviousJumpPair(obstacle);
+  if (pair) {
+    tryAddCoinPattern(buildBetweenObstacleCoinLine(r, pair), r, true);
+  }
+}
+
+function buildNearestSlideCoinLine(r) {
+  const lowbar = findNextLowbar();
+  if (!lowbar) {
+    return null;
+  }
+  const nextObstacle = findNextObstacle();
+  if (nextObstacle && nextObstacle !== lowbar && nextObstacle.x < lowbar.x) {
+    return null;
+  }
+  return buildSlideCoinLine(r, lowbar);
+}
+
+function tryAddCoinPattern(points, r, requirePreload = false) {
+  if (!points || points.length === 0) {
+    return false;
+  }
+  if (requirePreload && !isCoinPatternPreloaded(points)) {
+    return false;
+  }
+
+  const validPoints = points.filter((point) => canPlaceCoin(point.x, point.y, r, point.padding ?? 18));
+  if (validPoints.length !== points.length) {
+    return false;
+  }
+
+  validPoints.forEach((point) => coins.push({ x: point.x, y: point.y, r, padding: point.padding ?? 18 }));
+  return true;
+}
+
+function isCoinPatternPreloaded(points) {
+  return points.every((point) => point.x - 10 > canvas.width + coinPreloadBuffer);
+}
+
+function buildBetweenObstacleCoinLine(r, pair = null) {
+  pair = pair || findObstacleGapForCoins();
+  if (!pair) {
+    return null;
+  }
+
+  const [left, right] = pair;
+  const gapStart = left.x + left.w;
+  const gapEnd = right.x;
+  const centerX = (gapStart + gapEnd) * 0.5;
+  const spacing = 34;
+  const y = groundY - player.bodyHeight * 0.5;
+
+  return Array.from({ length: 4 }, (_, i) => ({
+    x: centerX + (i - 1.5) * spacing,
+    y,
+    padding: -10
+  }));
+}
+
+function buildJumpCoinArc(r, obstacle = null) {
+  const o = obstacle || findNextJumpObstacle();
+  if (!o) {
+    return null;
+  }
+
+  const centerX = o.x + o.w * 0.5;
+  const spacing = 34 + Math.min(10, state.speed * 0.8);
+  const baseY = Math.min(groundY - 52, o.y - 18);
+  const peakY = Math.max(groundY - 160, o.y - 58 - Math.min(28, state.speed * 1.8));
+
+  return Array.from({ length: 5 }, (_, i) => {
+    const offset = i - 2;
+    const t = Math.abs(offset) / 2;
+    const y = peakY + (baseY - peakY) * t * t;
+    return {
+      x: centerX + offset * spacing,
+      y,
+      padding: 16
+    };
+  });
+}
+
+function buildSlideCoinLine(r, obstacle = null) {
+  const o = obstacle || findNextLowbar();
+  if (!o) {
+    return null;
+  }
+
+  const centerX = o.x + o.w * 0.5;
+  const y = groundY - r - 5;
+
+  return Array.from({ length: 4 }, (_, i) => ({
+    x: centerX + (i - 1.5) * slideCoinSpacing,
+    y,
+    padding: -30
+  }));
+}
+
+function findNextJumpObstacle() {
+  const minX = player.x + 180;
+  const maxX = canvas.width + 760 + state.speed * 22;
+  return obstacles
+    .filter((o) => o.type !== "lowbar" && o.x > minX && o.x < maxX)
+    .sort((a, b) => a.x - b.x)[0] || null;
+}
+
+function findNextLowbar() {
+  const minX = player.x + 180;
+  const maxX = canvas.width + 760 + state.speed * 22;
+  return obstacles
+    .filter((o) => o.type === "lowbar" && o.x > minX && o.x < maxX)
+    .sort((a, b) => a.x - b.x)[0] || null;
+}
+
+function findNextObstacle() {
+  const minX = player.x + 180;
+  const maxX = canvas.width + 760 + state.speed * 22;
+  return obstacles
+    .filter((o) => o.x > minX && o.x < maxX)
+    .sort((a, b) => a.x - b.x)[0] || null;
+}
+
+function findObstacleGapForCoins() {
+  const candidates = obstacles
+    .filter((o) => o.type !== "lowbar" && o.x > player.x + 180 && o.x < canvas.width + 920)
+    .sort((a, b) => a.x - b.x);
+
+  for (let i = 0; i < candidates.length - 1; i += 1) {
+    const left = candidates[i];
+    const right = candidates[i + 1];
+    const gapStart = left.x + left.w;
+    const gapEnd = right.x;
+    if (gapEnd - gapStart < 150) {
+      continue;
+    }
+    if (hasCliffNearRange(gapStart, gapEnd, collectibleCliffPadding)) {
+      continue;
+    }
+    return [left, right];
+  }
+  return null;
+}
+
+function findPreviousJumpPair(obstacle) {
+  if (obstacle.type === "lowbar") {
+    return null;
+  }
+
+  const previous = obstacles
+    .filter((o) => o !== obstacle && o.type !== "lowbar" && o.x < obstacle.x)
+    .sort((a, b) => b.x - a.x)[0];
+
+  if (!previous) {
+    return null;
+  }
+
+  const gapStart = previous.x + previous.w;
+  const gapEnd = obstacle.x;
+  if (gapEnd - gapStart < 150) {
+    return null;
+  }
+  if (hasCliffNearRange(gapStart, gapEnd, collectibleCliffPadding)) {
+    return null;
+  }
+  return [previous, obstacle];
+}
+
+function canPlaceCoin(x, y, r, padding = 18) {
+  const size = r * 2;
+  if (!canSpawnCollectibleRect(x - r, y - r, size, size, padding)) {
+    return false;
+  }
+  for (const c of coins) {
+    const dx = c.x - x;
+    const dy = c.y - y;
+    if (dx * dx + dy * dy < Math.pow(c.r + r + 12, 2)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function addPetPickup() {
+  const w = 34;
+  const h = 34;
+
+  for (let attempt = 0; attempt < 24; attempt += 1) {
+    const x = canvas.width + 180 + Math.random() * 180;
+    const y = groundY - 95 - Math.random() * 70;
+
+    if (!canSpawnCollectibleRect(x, y, w, h, 42)) continue;
+    if (isRectTooCloseToPowerups(x, y, w, h, 80)) continue;
+
+    pets.push({
+      type: "pickup",
+      x,
+      y,
+      w,
+      h,
+      angle: 0,
+      spin: (Math.random() * 2 - 1) * 0.04,
+      bobSeed: Math.random() * Math.PI * 2
+    });
+    return;
+  }
+
+}
+
+function activatePetCompanion() {
+  // 删除 pickup 类型宠物
+  for (let i = pets.length - 1; i >= 0; i--) {
+    if (pets[i].type === "pickup") pets.splice(i, 1);
+  }
+
+  const now = performance.now();
+  pets.push({
+    type: "companion",
+    x: player.x + petFollowOffsetX,
+    y: player.y - player.bodyHeight + petFollowOffsetY, // 改：相对玩家上方
+    w: 34,
+    h: 34,
+    angle: 0,
+    angleVel: 0,
+    followUntil: now + petFollowDurationMs,
+    alive: true,             // ✅ 新增标记
+    wanderX: 0,
+    wanderY: 0,
+    wanderTargetX: (Math.random() * 2 - 1) * petMaxWanderX,
+    wanderTargetY: (Math.random() * 2 - 1) * petMaxWanderY,
+    wanderTimer: 0,
+    wanderInterval: 350 + Math.random() * 450
+  });
+
+  updateScore(); // 拾取后立即刷新右上角提示
+}
+
+function hasPetCompanion() {
+  return pets.some(p => p.type === "companion" && p.alive);
+}
+
+function updatePets(deltaMs, dt) {
+  const now = performance.now();
+
+  for (let i = pets.length - 1; i >= 0; i--) {
+    const p = pets[i];
+
+    if (p.type === "pickup") {
+      p.x -= state.speed * dt;
+      p.angle += p.spin * dt * 6;
+      p.y += Math.sin(now * 0.004 + p.bobSeed) * 0.18 * dt;
+
+      if (p.x + p.w < -40) {
+        pets.splice(i, 1);
+        continue;
+      }
+
+      if (isColliding(playerHitbox(), p)) {
+        activatePetCompanion();
+      }
+      continue;
+    }
+
+    if (p.type === "companion") {
+      // 超过持续时间，标记为死
+      if (now >= p.followUntil) {
+        p.alive = false;
+      }
+
+      if (!p.alive) {
+        pets.splice(i, 1);
+        updateScore();
+        continue;
+      }
+
+      // wander 随机移动逻辑
+      p.wanderTimer += deltaMs;
+      if (p.wanderTimer >= p.wanderInterval) {
+        p.wanderTimer = 0;
+        p.wanderInterval = 300 + Math.random() * 500;
+        p.wanderTargetX = (Math.random() * 2 - 1) * petMaxWanderX;
+        p.wanderTargetY = (Math.random() * 2 - 1) * petMaxWanderY;
+      }
+
+      p.wanderX += (p.wanderTargetX - p.wanderX) * 0.06 * dt;
+      p.wanderY += (p.wanderTargetY - p.wanderY) * 0.06 * dt;
+
+      const targetX = player.x + petFollowOffsetX + p.wanderX;
+      const targetY = (player.y - player.bodyHeight) + petFollowOffsetY + p.wanderY;
+
+      p.x += (targetX - p.x) * 0.16 * dt;
+      p.y += (targetY - p.y) * 0.16 * dt;
+
+      // 轻微旋转
+      p.angleVel += (Math.random() * 2 - 1) * 0.01 * dt;
+      p.angleVel *= 0.92;
+      p.angleVel = Math.max(-0.08, Math.min(0.08, p.angleVel));
+      p.angle += p.angleVel;
+    }
+  }
+}

@@ -1,0 +1,69 @@
+---
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import { url } from "@/utils/url-utils";
+---
+
+<MainGridLayout
+  title="火柴人小游戏"
+  description="火柴人 2D 跑酷小游戏"
+>
+  <div class="card-base overflow-hidden p-3 md:p-4">
+    <iframe
+      id="stickman-game-frame"
+      title="火柴人 2D 跑酷"
+      src={url("/game-assets/stickman/index.html")}
+      tabindex="0"
+      class="block h-[clamp(560px,calc(100vh-7rem),720px)] w-full rounded-xl border-0 bg-white"
+      loading="eager"
+      allow="autoplay"
+    />
+  </div>
+</MainGridLayout>
+
+<script>
+  const frame = document.getElementById("stickman-game-frame") as HTMLIFrameElement | null;
+  const gameKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"]);
+
+  function setGamePageScrollLock(locked: boolean) {
+    document.documentElement.classList.toggle("stickman-page-lock", locked);
+    document.body.classList.toggle("stickman-page-lock", locked);
+  }
+
+  frame?.addEventListener("load", () => {
+    frame.focus();
+    frame.contentWindow?.focus();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!document.documentElement.classList.contains("stickman-page-lock")) {
+      return;
+    }
+    if (!gameKeys.has(event.code)) {
+      return;
+    }
+    event.preventDefault();
+    frame?.contentWindow?.focus();
+  }, { passive: false });
+
+  window.addEventListener("message", (event) => {
+    if (event.origin !== window.location.origin) {
+      return;
+    }
+    if (event.data?.type === "stickman:start") {
+      setGamePageScrollLock(true);
+      frame?.focus();
+      frame?.contentWindow?.focus();
+    }
+  });
+
+  document.addEventListener("swup:visit:start", () => {
+    setGamePageScrollLock(false);
+  }, { once: true });
+</script>
+
+<style is:global>
+  html.stickman-page-lock,
+  body.stickman-page-lock {
+    overflow: hidden;
+  }
+</style>

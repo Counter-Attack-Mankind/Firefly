@@ -85,6 +85,7 @@ export default defineConfig({
 			globalInstance: true,
 			// 滚动相关配置优化
 			resolveUrl: (url) => url,
+			ignore: ["/games/"],
 			animateHistoryBrowsing: false,
 			skipPopStateHandling: (event) => {
 				// 跳过锚点链接的处理，让浏览器原生处理

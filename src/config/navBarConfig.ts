@@ -42,6 +42,12 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		],
 	});
 
+	links.push({
+		name: "小游戏",
+		url: "/games/stickman/",
+		icon: "material-symbols:sports-esports",
+	});
+
 	// 关于及其子菜单
 	links.push({
 		name: "关于",
