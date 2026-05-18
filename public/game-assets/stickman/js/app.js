@@ -18,6 +18,9 @@ function loop(timestamp) {
   state.lastTime = timestamp;
 
   update(deltaMs);
+  if (state.started && !state.running) {
+    releaseGamePageLock();
+  }
   if (typeof leaderboardTrackGameOver === "function") {
     leaderboardTrackGameOver();
   }
@@ -33,6 +36,14 @@ function startGame() {
   unlockAudio();
   playStartSound();
   resetGame();
+}
+
+function releaseGamePageLock() {
+  if (state.lockReleasedForRun) {
+    return;
+  }
+  state.lockReleasedForRun = true;
+  window.parent?.postMessage({ type: "stickman:game-over" }, window.location.origin);
 }
 
 function buildHeadMaskFromBackground() {

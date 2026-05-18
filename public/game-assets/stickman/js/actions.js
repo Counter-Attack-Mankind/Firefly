@@ -6,6 +6,7 @@
   state.prevSpeed = 6.6;
   state.score = 0;
   state.scoreSubmitted = false;
+  state.lockReleasedForRun = false;
   if (typeof leaderboardResetRun === "function") {
     leaderboardResetRun();
   }

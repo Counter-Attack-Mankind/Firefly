@@ -38,7 +38,8 @@
   cannonCountUnder1000: 0,
   nextCannonHigh: false,
   nextPetScore: petSpawnEveryScore,
-  scoreSubmitted: false
+  scoreSubmitted: false,
+  lockReleasedForRun: false
 
 };
 
