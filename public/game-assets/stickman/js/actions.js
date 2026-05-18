@@ -14,7 +14,7 @@
   state.obstacleTimer = 0;
   state.obstacleInterval = 1060;
   state.powerupTimer = 0;
-  state.powerupInterval = 8200;
+  state.powerupInterval = 15000;
   state.coinTimer = 0;
   state.coinInterval = 900;
   state.sceneIndex = 0;

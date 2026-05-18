@@ -47,11 +47,11 @@ function addJumpObstacleForScene(spawnX) {
   let h;
 
   if (theme.obstacleType === "pillar") {
-    h = 52 + Math.random() * 58;
-    w = 18 + Math.random() * 12;
+    h = 70 + Math.random() * 40;
+    w = 42 + Math.random() * 14;
   } else if (theme.obstacleType === "block") {
-    h = 34 + Math.random() * 42;
-    w = 30 + Math.random() * 22;
+    h = 42 + Math.random() * 22;
+    w = 44 + Math.random() * 18;
   } else {
     h = 34 + Math.random() * 30;
     w = 42 + Math.random() * 26;
@@ -91,6 +91,10 @@ function addCannonball() {
     x: spawnX,
     y,
     r: 14,
+    w: rpgDrawWidth,
+    h: rpgDrawHeight,
+    hitW: rpgHitWidth,
+    hitH: rpgHitHeight,
     speed: state.speed + 10,
     spawnTime: performance.now(),
     warning: true
@@ -428,7 +432,6 @@ function addPetPickup() {
       w,
       h,
       angle: 0,
-      spin: (Math.random() * 2 - 1) * 0.04,
       bobSeed: Math.random() * Math.PI * 2
     });
     return;
@@ -450,7 +453,6 @@ function activatePetCompanion() {
     w: 34,
     h: 34,
     angle: 0,
-    angleVel: 0,
     followUntil: now + petFollowDurationMs,
     alive: true,             // ✅ 新增标记
     wanderX: 0,
@@ -476,7 +478,6 @@ function updatePets(deltaMs, dt) {
 
     if (p.type === "pickup") {
       p.x -= state.speed * dt;
-      p.angle += p.spin * dt * 6;
       p.y += Math.sin(now * 0.004 + p.bobSeed) * 0.18 * dt;
 
       if (p.x + p.w < -40) {
@@ -519,12 +520,6 @@ function updatePets(deltaMs, dt) {
 
       p.x += (targetX - p.x) * 0.16 * dt;
       p.y += (targetY - p.y) * 0.16 * dt;
-
-      // 轻微旋转
-      p.angleVel += (Math.random() * 2 - 1) * 0.01 * dt;
-      p.angleVel *= 0.92;
-      p.angleVel = Math.max(-0.08, Math.min(0.08, p.angleVel));
-      p.angle += p.angleVel;
     }
   }
 }

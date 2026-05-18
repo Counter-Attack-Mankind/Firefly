@@ -21,7 +21,7 @@ const obstacleSpawnLeadMin = 300;
 const obstacleSpawnLeadRange = 220;
 const coinPreloadBuffer = 24;
 const slideCoinSpacing = 46;
-const sceneSwitchEveryScore = 1000;
+const sceneSwitchEveryScore = 2000;
 const sceneTunnelLeadScore = 120;
 const sceneTunnelFadeScore = 95;
 const sceneTunnelX = canvas.width - 170;
@@ -80,9 +80,22 @@ const sceneThemes = [
 
 const headImage = new Image();
 const cannonballs = [];
+const rpgImage = new Image();
+rpgImage.src = "character_move/RPG.png";
+const rpgDrawWidth = 82;
+const rpgDrawHeight = 52;
+const rpgHitWidth = 60;
+const rpgHitHeight = 32;
 
 const petImage = new Image();
-petImage.src = "character_move/pet.png";
+petImage.src = "character_move/pet.webp";
+
+const coinImage = new Image();
+coinImage.src = "character_move/coin.png";
+const cactusImage = new Image();
+cactusImage.src = "character_move/cactus.png";
+const roadblocksImage = new Image();
+roadblocksImage.src = "character_move/roadblocks.png";
 
 const pets = [];
 const petFollowDurationMs = 10000;

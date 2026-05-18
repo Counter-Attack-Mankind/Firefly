@@ -162,7 +162,7 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
   if (state.powerupTimer >= state.powerupInterval) {
     state.powerupTimer = 0;
     addShieldPowerup();
-    state.powerupInterval = 8200 + Math.random() * 6200;
+    state.powerupInterval = 15000 + Math.random() * 9000;
   }
 
   // 炮弹生成：把随机结果存在 state 中，避免每帧重抽导致节奏不可控。
@@ -298,7 +298,10 @@ if (c.warning) {
   // 飞行
   c.x -= c.speed * dt;
 
-  if (c.x + c.r < -20) {
+  const halfW = (c.hitW || c.r * 2) / 2;
+  const halfH = (c.hitH || c.r * 2) / 2;
+
+  if (c.x + (c.w || halfW * 2) / 2 < -20) {
     cannonballs.splice(i, 1);
     continue;
   }
@@ -306,10 +309,10 @@ if (c.warning) {
   // 碰撞
   const hb = playerHitbox();
   if (
-    hb.x < c.x + c.r &&
-    hb.x + hb.w > c.x - c.r &&
-    hb.y < c.y + c.r &&
-    hb.y + hb.h > c.y - c.r
+    hb.x < c.x + halfW &&
+    hb.x + hb.w > c.x - halfW &&
+    hb.y < c.y + halfH &&
+    hb.y + hb.h > c.y - halfH
   ) {
         if (hasShield()) {
       consumeShield();

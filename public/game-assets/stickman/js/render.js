@@ -588,86 +588,55 @@ function drawConstructionBar(obstacle) {
 }
 
 function drawRoadBarrier(obstacle) {
-  const x = obstacle.x;
-  const y = obstacle.y;
-  const w = obstacle.w;
-  const h = obstacle.h;
-  const footH = Math.max(5, h * 0.12);
+  const visualW = obstacle.w * 1.25;
+  const visualH = obstacle.h * 1.25;
+  const x = obstacle.x + obstacle.w / 2 - visualW / 2;
+  const y = groundY + 1 - visualH;
 
   ctx.fillStyle = "rgba(0, 0, 0, 0.16)";
-  ctx.fillRect(x - 4, groundY + 2, w + 8, 5);
+  ctx.fillRect(x + visualW * 0.1, groundY + 2, visualW * 0.8, 5);
 
-  ctx.fillStyle = "#303846";
-  roundRect(x - 3, y + h - footH, w + 6, footH, 3);
-  ctx.fill();
+  if (roadblocksImage.complete && roadblocksImage.naturalWidth > 0) {
+    ctx.drawImage(roadblocksImage, x, y, visualW, visualH);
+    return;
+  }
 
-  const bodyY = y + h * 0.08;
-  const bodyH = h - footH - h * 0.08;
   ctx.fillStyle = "#f28b25";
-  roundRect(x, bodyY, w, bodyH, 5);
+  roundRect(x + visualW * 0.12, y + visualH * 0.08, visualW * 0.76, visualH * 0.86, 6);
   ctx.fill();
-
-  ctx.save();
-  ctx.beginPath();
-  roundRect(x, bodyY, w, bodyH, 5);
-  ctx.clip();
   ctx.strokeStyle = "#fff4cf";
-  ctx.lineWidth = Math.max(6, w * 0.22);
+  ctx.lineWidth = Math.max(6, visualW * 0.14);
   ctx.beginPath();
-  ctx.moveTo(x - w * 0.2, bodyY + bodyH);
-  ctx.lineTo(x + w * 0.72, bodyY);
-  ctx.moveTo(x + w * 0.28, bodyY + bodyH);
-  ctx.lineTo(x + w * 1.2, bodyY);
-  ctx.stroke();
-  ctx.restore();
-
-  ctx.strokeStyle = "#8f4d16";
-  ctx.lineWidth = 2;
-  roundRect(x, bodyY, w, bodyH, 5);
+  ctx.moveTo(x + visualW * 0.22, y + visualH * 0.78);
+  ctx.lineTo(x + visualW * 0.58, y + visualH * 0.2);
+  ctx.moveTo(x + visualW * 0.46, y + visualH * 0.86);
+  ctx.lineTo(x + visualW * 0.78, y + visualH * 0.32);
   ctx.stroke();
 }
 
 function drawCactus(obstacle) {
-  const x = obstacle.x;
-  const y = obstacle.y;
-  const w = obstacle.w;
-  const h = obstacle.h;
-  const cx = x + w * 0.5;
-  const trunkW = Math.max(14, w * 0.82);
-  const trunkX = cx - trunkW * 0.5;
+  const visualH = obstacle.h * 1.08;
+  const visualW = visualH * 0.62;
+  const x = obstacle.x + obstacle.w / 2 - visualW / 2;
+  const y = groundY + 1 - visualH;
 
   ctx.fillStyle = "rgba(0, 0, 0, 0.14)";
-  ctx.fillRect(x - 5, groundY + 2, w + 10, 5);
+  ctx.fillRect(x + visualW * 0.08, groundY + 2, visualW * 0.84, 5);
 
-  ctx.fillStyle = "#2f9b62";
-  roundRect(trunkX, y, trunkW, h, trunkW * 0.5);
-  ctx.fill();
-
-  const armW = Math.max(7, trunkW * 0.45);
-  const armH = Math.max(18, h * 0.34);
-  ctx.fillStyle = "#2f9b62";
-  roundRect(trunkX - armW * 0.55, y + h * 0.36, armW, armH, armW * 0.5);
-  ctx.fill();
-  roundRect(trunkX + trunkW - armW * 0.45, y + h * 0.22, armW, armH, armW * 0.5);
-  ctx.fill();
-
-  ctx.strokeStyle = "#1f7147";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(cx, y + 6);
-  ctx.lineTo(cx, y + h - 5);
-  ctx.moveTo(cx - trunkW * 0.24, y + 12);
-  ctx.lineTo(cx - trunkW * 0.18, y + h - 8);
-  ctx.moveTo(cx + trunkW * 0.24, y + 12);
-  ctx.lineTo(cx + trunkW * 0.18, y + h - 8);
-  ctx.stroke();
-
-  ctx.fillStyle = "#f6d95e";
-  for (let i = 0; i < 5; i += 1) {
-    const py = y + 10 + i * (h - 20) / 4;
-    ctx.fillRect(cx - trunkW * 0.35, py, 2, 2);
-    ctx.fillRect(cx + trunkW * 0.28, py + 4, 2, 2);
+  if (cactusImage.complete && cactusImage.naturalWidth > 0) {
+    ctx.drawImage(cactusImage, x, y, visualW, visualH);
+    return;
   }
+
+  const cx = x + visualW * 0.5;
+  const trunkW = visualW * 0.34;
+  ctx.fillStyle = "#2f9b62";
+  roundRect(cx - trunkW / 2, y + visualH * 0.08, trunkW, visualH * 0.84, trunkW * 0.5);
+  ctx.fill();
+  roundRect(x + visualW * 0.18, y + visualH * 0.35, trunkW * 0.75, visualH * 0.32, trunkW * 0.5);
+  ctx.fill();
+  roundRect(x + visualW * 0.62, y + visualH * 0.22, trunkW * 0.75, visualH * 0.36, trunkW * 0.5);
+  ctx.fill();
 }
 
 function drawMetalSpikes(obstacle) {
@@ -739,19 +708,22 @@ function drawPowerups() {
 
 function drawCoins() {
   coins.forEach((c) => {
-    const spin = 0.45 + Math.sin(performance.now() * 0.01 + c.x * 0.02) * 0.55;
     ctx.save();
     ctx.translate(c.x, c.y);
-    ctx.scale(spin, 1);
-    ctx.fillStyle = "#f6c632";
-    ctx.beginPath();
-    ctx.arc(0, 0, c.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#b47e05";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(0, 0, c.r - 2, 0, Math.PI * 2);
-    ctx.stroke();
+    const size = c.r * 2.35;
+    if (coinImage.complete && coinImage.naturalWidth > 0) {
+      ctx.drawImage(coinImage, -size / 2, -size / 2, size, size);
+    } else {
+      ctx.fillStyle = "#f6c632";
+      ctx.beginPath();
+      ctx.arc(0, 0, c.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#b47e05";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, c.r - 2, 0, Math.PI * 2);
+      ctx.stroke();
+    }
     ctx.restore();
   });
 }
@@ -760,7 +732,6 @@ function drawPets() {
   pets.forEach((p) => {
     ctx.save();
     ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
-    ctx.rotate(p.angle || 0);
 
     if (p.type === "pickup") {
       const pulse = 1 + Math.sin(performance.now() * 0.008 + p.x * 0.02) * 0.08;
@@ -775,10 +746,30 @@ function drawPets() {
     if (petImage.complete && petImage.naturalWidth > 0) {
       ctx.drawImage(petImage, -p.w / 2, -p.h / 2, p.w, p.h);
     } else {
-      ctx.fillStyle = "#ffcc66";
+      const size = Math.min(p.w, p.h);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "#ef4444";
+      ctx.lineWidth = Math.max(5, size * 0.16);
       ctx.beginPath();
-      ctx.arc(0, 0, p.w * 0.4, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(0, 0, size * 0.34, Math.PI * 0.18, Math.PI * 0.82, true);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#f8fafc";
+      ctx.lineWidth = Math.max(3, size * 0.1);
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.22, size * 0.2);
+      ctx.lineTo(-size * 0.34, size * 0.34);
+      ctx.moveTo(size * 0.22, size * 0.2);
+      ctx.lineTo(size * 0.34, size * 0.34);
+      ctx.stroke();
+
+      ctx.fillStyle = "#0f172a";
+      ctx.font = `bold ${Math.round(size * 0.34)}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("N", -size * 0.26, size * 0.42);
+      ctx.fillText("S", size * 0.26, size * 0.42);
     }
 
     // companion 微光
@@ -810,16 +801,38 @@ function drawCannonballs() {
       return;
     }
 
-    // 炮弹
-    ctx.fillStyle = "#222";
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-    ctx.fill();
+    const w = c.w || rpgDrawWidth;
+    const h = c.h || rpgDrawHeight;
 
-    ctx.fillStyle = "orange";
-    ctx.beginPath();
-    ctx.arc(c.x + 4, c.y - 4, 4, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    ctx.shadowColor = "rgba(15, 23, 42, 0.28)";
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 4;
+
+    if (rpgImage.complete && rpgImage.naturalWidth > 0) {
+      ctx.drawImage(rpgImage, -w / 2, -h / 2, w, h);
+    } else {
+      const grad = ctx.createLinearGradient(-w / 2, 0, w / 2, 0);
+      grad.addColorStop(0, "#ef4444");
+      grad.addColorStop(0.18, "#facc15");
+      grad.addColorStop(0.68, "#e2e8f0");
+      grad.addColorStop(1, "#f59e0b");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(-w / 2, -h * 0.28, w * 0.82, h * 0.56, h * 0.28);
+      ctx.fill();
+      ctx.fillStyle = "#92400e";
+      ctx.beginPath();
+      ctx.moveTo(w * 0.22, -h * 0.25);
+      ctx.lineTo(w * 0.48, -h * 0.42);
+      ctx.lineTo(w * 0.44, h * 0.42);
+      ctx.lineTo(w * 0.22, h * 0.25);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.restore();
   });
 }
 

@@ -9,7 +9,7 @@
   obstacleTimer: 0,
   obstacleInterval: 1060,
   powerupTimer: 0,
-  powerupInterval: 8200,
+  powerupInterval: 15000,
   coinTimer: 0,
   coinInterval: 900,
   shieldUntil: 0,

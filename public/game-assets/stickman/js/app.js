@@ -102,7 +102,6 @@ function buildHeadMaskFromBackground() {
   );
 
   const threshold = 78;
-  const softEdgeThreshold = 106;
   const whiteCutoff = 228;
   const whiteDiffLimit = 30;
   const seen = new Uint8Array(size * size);
@@ -172,106 +171,6 @@ function buildHeadMaskFromBackground() {
       }
       const i = idx * 4;
       data[i + 3] = 0;
-    }
-  }
-
-  // Remove remaining near-white isolated paper/background pixels.
-  for (let y = 0; y < size; y += 1) {
-    for (let x = 0; x < size; x += 1) {
-      const i = (y * size + x) * 4;
-      if (data[i + 3] === 0) {
-        continue;
-      }
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      const maxV = Math.max(r, g, b);
-      const minV = Math.min(r, g, b);
-      if (maxV >= whiteCutoff && maxV - minV <= whiteDiffLimit) {
-        data[i + 3] = 0;
-      }
-    }
-  }
-
-  // Keep only largest connected opaque region to preserve head silhouette.
-  const kept = new Uint8Array(size * size);
-  const visited = new Uint8Array(size * size);
-  let bestCount = 0;
-  let bestPixels = [];
-  const neighbors = [
-    [1, 0],
-    [-1, 0],
-    [0, 1],
-    [0, -1]
-  ];
-  for (let y = 0; y < size; y += 1) {
-    for (let x = 0; x < size; x += 1) {
-      const idx = y * size + x;
-      if (visited[idx]) {
-        continue;
-      }
-      const i = idx * 4;
-      if (data[i + 3] === 0) {
-        continue;
-      }
-      const comp = [];
-      const q = [idx];
-      visited[idx] = 1;
-      for (let qi = 0; qi < q.length; qi += 1) {
-        const cur = q[qi];
-        comp.push(cur);
-        const cx = cur % size;
-        const cy = Math.floor(cur / size);
-        for (const n of neighbors) {
-          const nx = cx + n[0];
-          const ny = cy + n[1];
-          if (nx < 0 || ny < 0 || nx >= size || ny >= size) {
-            continue;
-          }
-          const nidx = ny * size + nx;
-          if (visited[nidx]) {
-            continue;
-          }
-          const ni = nidx * 4;
-          if (data[ni + 3] === 0) {
-            continue;
-          }
-          visited[nidx] = 1;
-          q.push(nidx);
-        }
-      }
-      if (comp.length > bestCount) {
-        bestCount = comp.length;
-        bestPixels = comp;
-      }
-    }
-  }
-  for (const idx of bestPixels) {
-    kept[idx] = 1;
-  }
-  for (let idx = 0; idx < size * size; idx += 1) {
-    if (kept[idx]) {
-      continue;
-    }
-    const i = idx * 4;
-    data[i + 3] = 0;
-  }
-
-  for (let y = 1; y < size - 1; y += 1) {
-    for (let x = 1; x < size - 1; x += 1) {
-      const idx = y * size + x;
-      const i = idx * 4;
-      if (data[i + 3] === 0) {
-        continue;
-      }
-      const dr = data[i] - bg.r;
-      const dg = data[i + 1] - bg.g;
-      const db = data[i + 2] - bg.b;
-      const dist = Math.sqrt(dr * dr + dg * dg + db * db);
-      if (dist < softEdgeThreshold) {
-        const keepAlpha = Math.min(1, (dist - threshold) / (softEdgeThreshold - threshold));
-        data[i + 3] = Math.round(255 * keepAlpha);
-      }
     }
   }
 
