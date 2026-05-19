@@ -137,6 +137,22 @@ import { url } from "@/utils/url-utils";
     );
   }
 
+  async function setFullscreenOrientation(active: boolean) {
+    const orientation = screen.orientation as ScreenOrientation & {
+      lock?: (orientation: "landscape") => Promise<void>;
+      unlock?: () => void;
+    };
+    try {
+      if (active) {
+        await orientation.lock?.("landscape");
+        return;
+      }
+      orientation.unlock?.();
+    } catch (_error) {
+      // Some browsers do not allow orientation locking; CSS rotation still applies.
+    }
+  }
+
   frame?.addEventListener("load", () => {
     frame.focus();
     frame.contentWindow?.focus();
@@ -156,10 +172,12 @@ import { url } from "@/utils/url-utils";
     try {
       if (document.fullscreenElement) {
         await document.exitFullscreen();
+        await setFullscreenOrientation(false);
         setFullscreenUi(false);
         return;
       }
       await shell.requestFullscreen();
+      await setFullscreenOrientation(true);
       setFullscreenUi(true);
       frame?.focus();
       frame?.contentWindow?.focus();
@@ -169,7 +187,11 @@ import { url } from "@/utils/url-utils";
   });
 
   document.addEventListener("fullscreenchange", () => {
-    setFullscreenUi(document.fullscreenElement === shell);
+    const active = document.fullscreenElement === shell;
+    if (!active) {
+      void setFullscreenOrientation(false);
+    }
+    setFullscreenUi(active);
   });
 
   document.addEventListener("keydown", (event) => {
@@ -488,6 +510,7 @@ import { url } from "@/utils/url-utils";
   }
 
   #stickman-game-shell:fullscreen .stickman-game-panel {
+    position: relative;
     width: 100vw;
     height: 100vh;
     border: 0;
@@ -531,10 +554,16 @@ import { url } from "@/utils/url-utils";
   }
 
   #stickman-game-shell:fullscreen #stickman-game-frame {
-    width: 100vw;
-    height: 100vh;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    width: 100vh;
+    height: 100vw;
     border-radius: 0;
     background: #020617;
+    transform: translate(-50%, -50%) rotate(90deg);
+    transform-origin: center;
   }
 
   @media (max-width: 820px) {
@@ -543,7 +572,7 @@ import { url } from "@/utils/url-utils";
       grid-template-columns: 1fr;
     }
 
-    #stickman-game-frame {
+    .stickman-game-shell:not(:fullscreen) #stickman-game-frame {
       height: clamp(480px, 70vh, 680px);
     }
   }
