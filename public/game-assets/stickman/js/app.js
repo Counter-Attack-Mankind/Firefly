@@ -53,8 +53,13 @@ async function setMobilePlayMode(enabled) {
 
   try {
     if (enabled) {
-      await document.documentElement.requestFullscreen?.();
-      await screen.orientation?.lock?.("landscape");
+      const fullscreenTarget = document.querySelector(".play-area") || document.documentElement;
+      await fullscreenTarget.requestFullscreen?.();
+      try {
+        await screen.orientation?.lock?.("landscape");
+      } catch (_orientationError) {
+        // CSS rotation keeps the game playable when orientation lock is unavailable.
+      }
     } else {
       screen.orientation?.unlock?.();
       if (document.fullscreenElement) {
@@ -308,14 +313,6 @@ document.getElementById("exitMobileButton")?.addEventListener("pointerdown", (ev
   event.preventDefault();
   event.stopPropagation();
   setMobilePlayMode(false);
-});
-
-document.addEventListener("fullscreenchange", () => {
-  if (!document.fullscreenElement && state.mobileControls) {
-    state.mobileControls = false;
-    state.downPressed = false;
-    updateMobileControlsButton();
-  }
 });
 
 function bindMobileActionButton(buttonId, handlers) {

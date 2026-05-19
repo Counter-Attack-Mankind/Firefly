@@ -30,6 +30,9 @@ body.mobile-play-mode {
   padding: 0;
   overflow: hidden;
   background: #020617;
+  width: 100vw;
+  height: 100vh;
+  touch-action: none;
 }
 
 body.mobile-play-mode .page-layout {
@@ -55,9 +58,11 @@ body.mobile-play-mode .play-area {
   align-items: center;
   justify-content: center;
   background: #020617;
+  overflow: hidden;
 }
 
 body.mobile-play-mode .game-stage {
+  position: relative;
   width: min(100vw, calc(100vh * 16 / 7));
   aspect-ratio: 16 / 7;
 }
@@ -78,6 +83,14 @@ body.mobile-play-mode .hud {
 
 body.mobile-play-mode .exit-mobile-button {
   display: inline-flex;
+}
+
+body.mobile-play-mode:fullscreen {
+  background: #020617;
+}
+
+body.mobile-play-mode .play-area:fullscreen {
+  background: #020617;
 }
 
 .debug-tools {
