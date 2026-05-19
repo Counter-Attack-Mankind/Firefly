@@ -1,4 +1,6 @@
 ﻿let losePlayed = false; // 防止一帧内多次触发
+let lastShieldAudioAt = 0;
+
 function getCharacterAudioSrc(fileName) {
   const character = getCurrentCharacterConfig();
   return character.assetBase ? `${character.assetBase}/${fileName}` : "";
@@ -19,11 +21,19 @@ function playAudioWithFallback(sources, volume, label) {
       return;
     }
     const audio = new Audio(queue[index]);
+    let advanced = false;
+    const tryNext = () => {
+      if (advanced) {
+        return;
+      }
+      advanced = true;
+      tryPlay(index + 1);
+    };
     audio.preload = "auto";
     audio.volume = volume;
-    audio.addEventListener("error", () => tryPlay(index + 1), { once: true });
+    audio.addEventListener("error", tryNext, { once: true });
     audio.currentTime = 0;
-    audio.play().catch(() => tryPlay(index + 1));
+    audio.play().catch(tryNext);
   }
 
   try {
@@ -43,6 +53,11 @@ function playStartSound() {
   playAudioWithFallback(getCharacterAudioSources("begin", "audio/begin.mp3"), 0.6, "启动音效");
 }
 function playShieldAudio() {
+  const now = performance.now();
+  if (now - lastShieldAudioAt < 120) {
+    return;
+  }
+  lastShieldAudioAt = now;
   playAudioWithFallback(getCharacterAudioSources("protect", "audio/protect.mp3"), 0.7, "护盾音效");
 }
 function playSkillAudio() {

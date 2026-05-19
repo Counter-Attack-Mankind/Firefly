@@ -72,6 +72,14 @@ body.mobile-play-mode .mobile-controls {
   aspect-ratio: auto;
 }
 
+body.mobile-play-mode .hud {
+  top: 56px;
+}
+
+body.mobile-play-mode .exit-mobile-button {
+  display: inline-flex;
+}
+
 .debug-tools {
   position: absolute;
   top: 0;
@@ -564,6 +572,31 @@ body.mobile-play-mode .mobile-controls {
 
 .pause-button[hidden] {
   display: none;
+}
+
+.exit-mobile-button {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 9;
+  height: 34px;
+  padding: 0 12px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.6);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.24);
+  backdrop-filter: blur(8px);
+}
+
+.exit-mobile-button:active {
+  transform: scale(0.96);
 }
 
 .debug-distance-button {

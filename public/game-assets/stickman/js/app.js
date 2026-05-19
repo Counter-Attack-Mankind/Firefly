@@ -66,6 +66,12 @@ async function setMobilePlayMode(enabled) {
   }
 }
 
+function restartRun() {
+  unlockAudio();
+  playStartSound();
+  resetGame();
+}
+
 function updateSecretProgressBar() {
   const progressFill = document.getElementById("secretProgressFill");
   const progressText = document.getElementById("secretProgressText");
@@ -241,9 +247,7 @@ window.addEventListener("keydown", (e) => {
   }
   if (e.key.toLowerCase() === "r") {
     e.preventDefault();
-    unlockAudio();
-    playStartSound();
-    resetGame();
+    restartRun();
     return;
   }
   if (state.paused) {
@@ -267,6 +271,10 @@ window.addEventListener("keyup", (e) => {
 });
 
 canvas.addEventListener("pointerdown", () => {
+  if (state.mobileControls && state.started && !state.running) {
+    restartRun();
+    return;
+  }
   if (!state.started) {
     startGame();
     return;
@@ -294,6 +302,20 @@ document.getElementById("mobileControlsButton")?.addEventListener("pointerdown",
   event.preventDefault();
   event.stopPropagation();
   setMobilePlayMode(!state.mobileControls);
+});
+
+document.getElementById("exitMobileButton")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  setMobilePlayMode(false);
+});
+
+document.addEventListener("fullscreenchange", () => {
+  if (!document.fullscreenElement && state.mobileControls) {
+    state.mobileControls = false;
+    state.downPressed = false;
+    updateMobileControlsButton();
+  }
 });
 
 function bindMobileActionButton(buttonId, handlers) {
@@ -366,9 +388,7 @@ document.getElementById("characterStartButton")?.addEventListener("click", (even
   event.preventDefault();
   event.stopPropagation();
   if (state.started && !state.running) {
-    unlockAudio();
-    playStartSound();
-    resetGame();
+    restartRun();
     return;
   }
   startGame();
