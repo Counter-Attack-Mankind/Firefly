@@ -43,37 +43,12 @@ function updateMobileControlsButton() {
   mobileButton.textContent = state.mobileControls ? "退出手机端" : "手机端";
   mobileControls.classList.toggle("is-active", state.mobileControls);
   mobileControls.setAttribute("aria-hidden", state.mobileControls ? "false" : "true");
-  document.body.classList.toggle("mobile-play-mode", state.mobileControls);
 }
 
-async function setMobilePlayMode(enabled) {
+function setMobileControlsEnabled(enabled) {
   state.mobileControls = enabled;
   state.downPressed = false;
   updateMobileControlsButton();
-
-  if (enabled) {
-    const fullscreenTarget = document.querySelector(".game-stage") || document.documentElement;
-    try {
-      await fullscreenTarget.requestFullscreen?.();
-    } catch (_fullscreenError) {
-      // CSS full-screen mode remains active when native fullscreen is unavailable.
-    }
-    try {
-      await screen.orientation?.lock?.("landscape");
-    } catch (_orientationError) {
-      // CSS rotation keeps the game playable when orientation lock is unavailable.
-    }
-    return;
-  }
-
-  try {
-      screen.orientation?.unlock?.();
-      if (document.fullscreenElement) {
-        await document.exitFullscreen?.();
-      }
-  } catch (_error) {
-    // Exiting native fullscreen can be unavailable on some browsers.
-  }
 }
 
 function restartRun() {
@@ -321,13 +296,13 @@ document.getElementById("debugDistanceButton")?.addEventListener("pointerdown", 
 document.getElementById("mobileControlsButton")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   event.stopPropagation();
-  setMobilePlayMode(!state.mobileControls);
+  setMobileControlsEnabled(!state.mobileControls);
 });
 
 document.getElementById("exitMobileButton")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   event.stopPropagation();
-  setMobilePlayMode(false);
+  setMobileControlsEnabled(false);
 });
 
 function bindMobileActionButton(buttonId, handlers) {
