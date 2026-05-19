@@ -13,6 +13,10 @@ const shieldDurationMs = 5000;
 const coinBonus = 10;
 const highScoreKey = "stickman_runner_highscore_v1";
 const powerupWarningMs = 2000;
+const secretChargeMax = 400;       //金币技能数量
+const secretChargePerCoin = 1;
+const secretRealmDistance = 100;
+const secretCoinSpacing = 62;
 const lowbarCliffMinDistance = 820;
 const lowbarJumpMinDistance = 520;
 const collectibleCliffPadding = 42;
@@ -22,7 +26,7 @@ const obstacleSpawnLeadMin = 300;
 const obstacleSpawnLeadRange = 220;
 const coinPreloadBuffer = 24;
 const slideCoinSpacing = 46;
-const sceneSwitchEveryScore = 2000;
+const sceneSwitchEveryScore = 1000;   //场景变换距离
 const sceneTunnelLeadScore = 120;
 const sceneTunnelFadeScore = 95;
 const sceneTunnelX = canvas.width - 170;
@@ -77,8 +81,22 @@ const sceneThemes = [
     groundDay: [128, 104, 82],
     groundStrokeNight: [92, 66, 48],
     groundStrokeDay: [208, 174, 112]
+  },
+  {
+    id: "dream",
+    name: "秘境",
+    obstacleType: "block",
+    skyNightTop: [24, 20, 66],
+    skyDayTop: [166, 214, 255],
+    skyNightBottom: [62, 42, 98],
+    skyDayBottom: [255, 222, 246],
+    groundNight: [58, 42, 92],
+    groundDay: [152, 118, 208],
+    groundStrokeNight: [122, 90, 184],
+    groundStrokeDay: [224, 196, 255]
   }
 ];
+const secretSceneIndex = sceneThemes.findIndex((theme) => theme.id === "dream");
 
 const headImage = new Image();
 const cannonballs = [];
@@ -120,6 +138,9 @@ loseAudio.volume = 0.7;
 const alarmAudio = new Audio("audio/alarm.mp3");
 alarmAudio.preload = "auto";
 alarmAudio.volume = 0.8;
+const dreamAudio = new Audio("audio/dream.mp3");
+dreamAudio.preload = "auto";
+dreamAudio.volume = 0.72;
 
 //头像载入
 headImage.src = "character_move/lsj.jpg";
@@ -130,4 +151,3 @@ headImage.onerror = () => {
 let headMaskCanvas = null;
 let audioCtx = null;
 let audioUnlocked = false;
-

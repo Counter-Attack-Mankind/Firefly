@@ -114,7 +114,7 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
   const maxSpeed = 13.5;   // ❗降低上限
   const accel = 0.00008;   // ❗减缓增长
   state.speed += accel * deltaMs * (1 - state.speed / maxSpeed);
-  const sceneTransitionActive = updateSceneTransition(deltaMs, dt);
+  const sceneTransitionActive = state.inSecretRealm ? false : updateSceneTransition(deltaMs, dt);
   updateScore();
 
   if (sceneTransitionActive) {
@@ -143,39 +143,43 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
     player.landRecover = Math.max(0, player.landRecover - 0.09 * dt);
   }
 
-  state.obstacleTimer += deltaMs;
-  if (state.obstacleTimer >= state.obstacleInterval) {
-    state.obstacleTimer = 0;
-    addObstacle();
-    state.obstacleInterval = 860 + Math.random() * 520;
-  }
-
-  state.cliffTimer += deltaMs;
-  if (state.cliffTimer >= state.cliffInterval) {
-    state.cliffTimer = 0;
-    addCliff();
-    // 随着速度提升更密集
-    state.cliffInterval = 6200 - Math.min(2200, (state.speed - 6.6) * 180) + Math.random() * 2600;
-  }
-
-  state.powerupTimer += deltaMs;
-  if (state.powerupTimer >= state.powerupInterval) {
-    state.powerupTimer = 0;
-    addShieldPowerup();
-    state.powerupInterval = 15000 + Math.random() * 9000;
-  }
-
-  // 炮弹生成：把随机结果存在 state 中，避免每帧重抽导致节奏不可控。
-  state.cannonTimer += deltaMs;
-  const canFireUnder1000 = state.score <= 1000 && state.cannonCountUnder1000 < 2;
-  const canFireAfter1000 = state.score > 1000;
-  if ((canFireUnder1000 || canFireAfter1000) && state.cannonTimer >= state.cannonInterval && cannonballs.length < 1) {
-    state.cannonTimer = 0;
-    addCannonball();
-    if (canFireUnder1000) {
-      state.cannonCountUnder1000 += 1;
+  if (state.inSecretRealm) {
+    updateSecretRealmCoins(dt);
+  } else {
+    state.obstacleTimer += deltaMs;
+    if (state.obstacleTimer >= state.obstacleInterval) {
+      state.obstacleTimer = 0;
+      addObstacle();
+      state.obstacleInterval = 860 + Math.random() * 520;
     }
-    state.cannonInterval = getNextCannonInterval();
+
+    state.cliffTimer += deltaMs;
+    if (state.cliffTimer >= state.cliffInterval) {
+      state.cliffTimer = 0;
+      addCliff();
+      // 随着速度提升更密集
+      state.cliffInterval = 6200 - Math.min(2200, (state.speed - 6.6) * 180) + Math.random() * 2600;
+    }
+
+    state.powerupTimer += deltaMs;
+    if (state.powerupTimer >= state.powerupInterval) {
+      state.powerupTimer = 0;
+      addShieldPowerup();
+      state.powerupInterval = 15000 + Math.random() * 9000;
+    }
+
+    // 炮弹生成：把随机结果存在 state 中，避免每帧重抽导致节奏不可控。
+    state.cannonTimer += deltaMs;
+    const canFireUnder1000 = state.score <= 1000 && state.cannonCountUnder1000 < 2;
+    const canFireAfter1000 = state.score > 1000;
+    if ((canFireUnder1000 || canFireAfter1000) && state.cannonTimer >= state.cannonInterval && cannonballs.length < 1) {
+      state.cannonTimer = 0;
+      addCannonball();
+      if (canFireUnder1000) {
+        state.cannonCountUnder1000 += 1;
+      }
+      state.cannonInterval = getNextCannonInterval();
+    }
   }
 
   for (const cloud of clouds) {
@@ -242,6 +246,9 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
     const dy = cy - closestY;
     if (dx * dx + dy * dy < c.r * c.r) {
       state.score += coinBonus;
+      if (!c.secret) {
+        addSecretCharge(secretChargePerCoin);
+      }
       playCoinSound();
       coins.splice(i, 1);
       updateScore();
@@ -327,7 +334,13 @@ if (c.warning) {
 }
   const runDistance = (0.05 + state.speed * 0.015) * dt;
   state.distance += runDistance;
+  if (state.inSecretRealm) {
+    state.secretDistance += runDistance;
+  }
   state.score += runDistance;
+  if (state.inSecretRealm && state.secretDistance >= secretRealmDistance) {
+    exitSecretRealm();
+  }
 
 }
 
@@ -708,4 +721,25 @@ function getNextCannonInterval() {
   const base = 9000;
   const difficulty = Math.min(2500, (state.score - 1000) * 0.25);
   return base - difficulty + Math.random() * 5000;
+}
+
+function updateSecretRealmCoins(dt) {
+  state.secretCoinTimer += state.speed * dt;
+  while (state.secretCoinTimer >= secretCoinSpacing) {
+    state.secretCoinTimer -= secretCoinSpacing;
+    addSecretCoinColumn(canvas.width + 80 + state.secretCoinTimer);
+  }
+}
+
+function addSecretCoinColumn(x) {
+  const r = 10;
+  const rows = [groundY - 64, groundY - 112, groundY - 160];
+  for (const y of rows) {
+    coins.push({
+      x,
+      y,
+      r,
+      secret: true
+    });
+  }
 }

@@ -7,6 +7,12 @@
   state.prevSpeed = 6.6;
   state.score = 0;
   state.distance = 0;
+  state.secretCharge = 0;
+  state.secretReady = false;
+  state.inSecretRealm = false;
+  state.secretDistance = 0;
+  state.secretSavedSceneIndex = sceneOrder[0];
+  state.secretCoinTimer = 0;
   state.scoreSubmitted = false;
   state.lockReleasedForRun = false;
   if (typeof leaderboardResetRun === "function") {
@@ -61,6 +67,79 @@
 
   losePlayed = false;
   updateScore();
+}
+
+function addSecretCharge(amount) {
+  if (state.inSecretRealm) {
+    return;
+  }
+  state.secretCharge = Math.min(secretChargeMax, state.secretCharge + amount);
+  state.secretReady = state.secretCharge >= secretChargeMax;
+  if (typeof updateSecretProgressBar === "function") {
+    updateSecretProgressBar();
+  }
+}
+
+function enterSecretRealm() {
+  if (
+    !state.started ||
+    !state.running ||
+    state.paused ||
+    !state.secretReady ||
+    state.inSecretRealm ||
+    state.sceneTransitionPhase !== "none"
+  ) {
+    return;
+  }
+
+  state.inSecretRealm = true;
+  state.secretReady = false;
+  state.secretCharge = 0;
+  state.secretDistance = 0;
+  state.secretCoinTimer = 0;
+  state.secretSavedSceneIndex = state.sceneIndex;
+  state.sceneIndex = secretSceneIndex >= 0 ? secretSceneIndex : state.sceneIndex;
+  state.sceneTransitionPhase = "none";
+  state.sceneWorldFrozen = false;
+  state.sceneTunnelVisible = false;
+  state.sceneTransitionDarkness = 0;
+  obstacles.length = 0;
+  cliffs.length = 0;
+  powerups.length = 0;
+  cannonballs.length = 0;
+  coins.length = 0;
+  pets.length = 0;
+  state.shieldHits = 0;
+  state.shieldUntil = 0;
+  if (typeof addSecretCoinColumn === "function") {
+    for (let i = 0; i < 8; i += 1) {
+      addSecretCoinColumn(canvas.width + 40 + i * secretCoinSpacing);
+    }
+  }
+  playDreamAudio();
+  updateScore();
+  if (typeof updateSecretProgressBar === "function") {
+    updateSecretProgressBar();
+  }
+}
+
+function exitSecretRealm() {
+  if (!state.inSecretRealm) {
+    return;
+  }
+  state.inSecretRealm = false;
+  state.secretDistance = 0;
+  state.secretCoinTimer = 0;
+  state.sceneIndex = state.secretSavedSceneIndex;
+  state.nextSceneScore = Math.max(
+    state.nextSceneScore,
+    Math.floor(state.distance / sceneSwitchEveryScore) * sceneSwitchEveryScore + sceneSwitchEveryScore
+  );
+  coins.length = 0;
+  updateScore();
+  if (typeof updateSecretProgressBar === "function") {
+    updateSecretProgressBar();
+  }
 }
 
 function hasShield() {

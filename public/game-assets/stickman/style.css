@@ -40,6 +40,124 @@ body {
   white-space: nowrap;
 }
 
+.secret-progress {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 5;
+  width: 274px;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid rgba(255, 218, 121, 0.58);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(18, 24, 42, 0.9), rgba(31, 34, 63, 0.84)),
+    radial-gradient(circle at 16% 20%, rgba(255, 235, 138, 0.34), transparent 42%);
+  box-shadow:
+    0 12px 26px rgba(15, 23, 42, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  color: #fff7d6;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  transition:
+    filter 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.secret-progress.is-ready,
+.secret-progress.is-active {
+  border-color: rgba(255, 235, 138, 0.95);
+  box-shadow:
+    0 0 24px rgba(250, 204, 21, 0.56),
+    0 0 54px rgba(56, 189, 248, 0.28),
+    0 12px 26px rgba(15, 23, 42, 0.28),
+    inset 0 0 18px rgba(255, 255, 255, 0.14);
+  filter: saturate(1.18);
+}
+
+.secret-progress-orb {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 2px solid rgba(255, 238, 166, 0.82);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 28%, #fff7ad 0 14%, #f59e0b 31%, #7c2d12 72%),
+    linear-gradient(145deg, #facc15, #ef4444);
+  box-shadow:
+    0 0 16px rgba(250, 204, 21, 0.56),
+    inset 0 -6px 12px rgba(124, 45, 18, 0.44);
+  color: #421708;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.secret-progress-orb::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.secret-progress-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.secret-progress-topline,
+.secret-progress-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.secret-progress-track {
+  height: 14px;
+  margin: 7px 0 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.38), rgba(255, 255, 255, 0.08)),
+    rgba(15, 23, 42, 0.5);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.36),
+    0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.secret-progress-fill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, #22c55e, #38bdf8 45%, #a855f7 72%, #facc15),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.62), transparent 52%);
+  box-shadow:
+    0 0 14px rgba(56, 189, 248, 0.56),
+    0 0 24px rgba(250, 204, 21, 0.34);
+  transition: width 180ms ease;
+}
+
+.secret-progress-hint {
+  justify-content: flex-start;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .leaderboard {
   width: min(1200px, 100%);
   max-width: 100%;
@@ -331,6 +449,31 @@ body {
     padding: 7px 9px;
     font-size: 12px;
     white-space: normal;
+  }
+
+  .secret-progress {
+    top: 10px;
+    left: 10px;
+    width: 206px;
+    min-height: 48px;
+    gap: 7px;
+    padding: 5px 9px 5px 5px;
+  }
+
+  .secret-progress-orb {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .secret-progress-topline,
+  .secret-progress-hint {
+    font-size: 10px;
+  }
+
+  .secret-progress-track {
+    height: 11px;
+    margin: 5px 0 4px;
   }
 
   .pause-button {

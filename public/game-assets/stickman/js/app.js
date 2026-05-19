@@ -31,6 +31,34 @@ function updateDebugDistanceButton() {
   debugButton.setAttribute("aria-pressed", state.debugDistances ? "true" : "false");
 }
 
+function updateSecretProgressBar() {
+  const progressFill = document.getElementById("secretProgressFill");
+  const progressText = document.getElementById("secretProgressText");
+  const progressHint = document.getElementById("secretProgressHint");
+  const progressRoot = document.querySelector(".secret-progress");
+  const progress = state.inSecretRealm
+    ? Math.min(100, Math.floor((state.secretDistance / secretRealmDistance) * 100))
+    : Math.min(100, Math.floor((state.secretCharge / secretChargeMax) * 100));
+
+  if (progressFill) {
+    progressFill.style.width = `${progress}%`;
+  }
+  if (progressText) {
+    progressText.textContent = state.inSecretRealm
+      ? `${Math.floor(state.secretDistance)} / ${secretRealmDistance}m`
+      : `${Math.floor(state.secretCharge)} / ${secretChargeMax}`;
+  }
+  if (progressHint) {
+    progressHint.textContent = state.inSecretRealm
+      ? "秘境奔跑中"
+      : state.secretReady
+        ? "按 E 释放秘境"
+        : "收集金币充能";
+  }
+  progressRoot?.classList.toggle("is-ready", state.secretReady && !state.inSecretRealm);
+  progressRoot?.classList.toggle("is-active", state.inSecretRealm);
+}
+
 function togglePause() {
   if (!state.started || !state.running) {
     return;
@@ -51,6 +79,7 @@ function loop(timestamp) {
   if (!state.paused) {
     update(deltaMs);
   }
+  updateSecretProgressBar();
   if (state.started && !state.running) {
     releaseGamePageLock();
   }
@@ -221,6 +250,11 @@ window.addEventListener("keydown", (e) => {
     togglePause();
     return;
   }
+  if (e.key.toLowerCase() === "e") {
+    e.preventDefault();
+    enterSecretRealm();
+    return;
+  }
   if (e.key.toLowerCase() === "r") {
     e.preventDefault();
     unlockAudio();
@@ -284,4 +318,5 @@ state.nextSceneIndex = pickNextSceneIndex(state.sceneIndex);
 updateScore();
 updatePauseButton();
 updateDebugDistanceButton();
+updateSecretProgressBar();
 requestAnimationFrame(loop);

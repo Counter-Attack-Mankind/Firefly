@@ -12,6 +12,21 @@
       <div class="hud">
         <div id="score">分数: 0 | 最高分: 0</div>
       </div>
+      <div class="secret-progress" aria-label="秘境进度">
+        <div class="secret-progress-orb">
+          <span>秘</span>
+        </div>
+        <div class="secret-progress-body">
+          <div class="secret-progress-topline">
+            <span>秘境能量</span>
+            <span id="secretProgressText">0 / 400</span>
+          </div>
+          <div class="secret-progress-track">
+            <div id="secretProgressFill" class="secret-progress-fill"></div>
+          </div>
+          <div id="secretProgressHint" class="secret-progress-hint">收集金币充能</div>
+        </div>
+      </div>
       <button
         id="pauseButton"
         class="pause-button"
@@ -32,7 +47,7 @@
       </button>
     </div>
     <div class="tips">
-      空格 / W / ↑ / 点击跳跃（支持二段跳），S / ↓ 可空中速降/地面下铲，躲避长横梁障碍（必须下铲）
+      空格 / W / ↑ / 点击跳跃（支持二段跳），S / ↓ 可空中速降/地面下铲，收集金币满400按E可开技能进入秘境
     </div>
     <script src="./js/config.js"></script>
     <script src="./js/storage.js"></script>

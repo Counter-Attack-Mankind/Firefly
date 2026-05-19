@@ -60,7 +60,7 @@ function addJumpObstacleForScene(spawnX) {
   if (hasLowbarNearRange(spawnX, spawnX + w, lowbarJumpMinDistance)) {
     return;
   }
-  if (hasCliffNearRange(spawnX, spawnX + w, collectibleCliffPadding + 30)) {
+  if (hasCliffNearRange(spawnX, spawnX + w, collectibleCliffPadding + 100)) {
     return;
   }
 
@@ -116,7 +116,7 @@ function addCliff() {
     const x = canvas.width + 220 + Math.random() * 220;
     if (isNearTunnelRange(x, x + w)) continue;
     if (hasLowbarNearRange(x, x + w, getSafeDistance())) continue;
-    if (hasJumpObstacleNearRange(x, x + w, collectibleCliffPadding + 80)) continue;
+    if (hasJumpObstacleNearRange(x, x + w, collectibleCliffPadding + 100)) continue;
     
     cliffs.push({ x, w });
     return;

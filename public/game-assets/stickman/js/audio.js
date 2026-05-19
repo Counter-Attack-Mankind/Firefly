@@ -107,3 +107,11 @@ function playCannonWarningSound() {
   }
 }
 
+function playDreamAudio() {
+  try {
+    dreamAudio.currentTime = 0;
+    dreamAudio.play().catch(() => {});
+  } catch (e) {
+    console.warn("秘境音效播放失败:", e);
+  }
+}
