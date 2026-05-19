@@ -501,6 +501,9 @@ if (leftLegFront) {
   // 绘制头像
   const headSize = player.headSize;
   const half = headSize / 2;
+  const character = getCurrentCharacterConfig();
+  const headDrawSize = headSize * (character.headCrop?.scale || 1);
+  const headDrawHalf = headDrawSize / 2;
   // Head anchor: apply the same translation for all states so the head stays
   // tightly connected to the torso line endpoint.
   ctx.translate(0, -half + 2);
@@ -510,12 +513,23 @@ if (leftLegFront) {
   }
 
   if (headMaskCanvas) {
-    ctx.drawImage(headMaskCanvas, -half, -half, headSize, headSize);
+    ctx.drawImage(headMaskCanvas, -headDrawHalf, -headDrawHalf, headDrawSize, headDrawSize);
   } else if (headImage.complete && headImage.naturalWidth > 0) {
-    ctx.drawImage(headImage, -half, -half, headSize, headSize);
+    const crop = getHeadCropRect();
+    ctx.drawImage(
+      headImage,
+      crop.x,
+      crop.y,
+      crop.w,
+      crop.h,
+      -headDrawHalf,
+      -headDrawHalf,
+      headDrawSize,
+      headDrawSize
+    );
   } else {
     ctx.fillStyle = "#cccccc";
-    ctx.fillRect(-half, -half, headSize, headSize);
+    ctx.fillRect(-headDrawHalf, -headDrawHalf, headDrawSize, headDrawSize);
   }
 
   // 护盾逻辑
@@ -525,12 +539,36 @@ if (leftLegFront) {
     const warningAlpha = remaining <= powerupWarningMs
       ? (Math.sin(now * 0.022) > 0 ? 0.95 : 0.2)
       : 0.9;
-    const pulse = 0.8 + Math.sin(now * 0.015) * 0.18;
-    ctx.strokeStyle = `rgba(0, 180, 255, ${warningAlpha})`;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(0, 0, headSize * (0.62 + pulse * 0.09), 0, Math.PI * 2);
-    ctx.stroke();
+    if (state.shieldVisual === "pdh") {
+      const pulse = 1 + 0.035 * Math.sin(now * 0.008);
+      const skillW = headSize * 2.25 * pulse;
+      const skillH = headSize * 3.15 * pulse;
+      const skillX = -skillW / 2;
+      const skillY = -headSize * 1.05;
+      ctx.globalAlpha = warningAlpha * 0.46;
+      if (pdhSkillImage.complete && pdhSkillImage.naturalWidth > 0) {
+        ctx.drawImage(
+          pdhSkillImage,
+          skillX,
+          skillY,
+          skillW,
+          skillH
+        );
+      } else {
+        ctx.fillStyle = `rgba(56, 189, 248, ${warningAlpha})`;
+        ctx.beginPath();
+        ctx.ellipse(0, headSize * 0.42, skillW * 0.35, skillH * 0.42, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    } else {
+      const pulse = 0.8 + Math.sin(now * 0.015) * 0.18;
+      ctx.strokeStyle = `rgba(0, 180, 255, ${warningAlpha})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, headSize * (0.62 + pulse * 0.09), 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
 
   ctx.restore();

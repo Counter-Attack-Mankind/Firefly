@@ -3,9 +3,10 @@
   const distance = Math.floor(state.distance);
   const leaderboardTopScore = Math.max(0, Math.floor(Number(state.leaderboardTopScore || 0)));
   const shieldText = hasShield() ? " | 护盾: 1" : "";
+  const doubleText = hasDoubleScore() ? " | 双倍: 1" : "";
   const petText = hasPetCompanion() ? " | 磁铁: 1" : "";
   const sceneText = ` | 场景: ${getCurrentSceneTheme().name}`;
-  scoreEl.textContent = `分数: ${score} | 距离: ${distance}m | 第一名: ${leaderboardTopScore}${sceneText}${shieldText}${petText}`;
+  scoreEl.textContent = `分数: ${score} | 距离: ${distance}m | 第一名: ${leaderboardTopScore}${sceneText}${shieldText}${doubleText}${petText}`;
 }
 
 function updatePauseButton() {
@@ -60,6 +61,8 @@ function updateSecretProgressBar() {
   if (progressHint) {
     progressHint.textContent = state.inSecretRealm
       ? "秘境奔跑中"
+      : hasDoubleScore()
+        ? `双倍得分 ${Math.ceil((state.doubleScoreUntil - performance.now()) / 1000)}s`
       : state.secretReady
         ? skill.readyText
         : skill.chargingText;
@@ -73,6 +76,9 @@ function getCurrentCharacterConfig() {
 }
 
 function setCharacter(characterId) {
+  if (state.started && state.running) {
+    return;
+  }
   const character = characterConfigs[characterId] || characterConfigs.lsj;
   state.characterId = character.id;
   state.secretCharge = 0;
@@ -84,6 +90,18 @@ function setCharacter(characterId) {
     card.classList.toggle("is-active", card.getAttribute("data-character-id") === character.id);
   });
   updateSecretProgressBar();
+}
+
+function updateCharacterSelectState() {
+  const locked = state.started && state.running;
+  document.querySelectorAll(".character-card").forEach((card) => {
+    card.disabled = locked;
+  });
+  const startButton = document.getElementById("characterStartButton");
+  if (startButton) {
+    startButton.disabled = locked;
+    startButton.textContent = state.started && !state.running ? "再来一局" : "开始游戏";
+  }
 }
 
 function togglePause() {
@@ -115,6 +133,7 @@ function loop(timestamp) {
   }
   draw();
   updatePauseButton();
+  updateCharacterSelectState();
   requestAnimationFrame(loop);
 }
 
@@ -122,7 +141,6 @@ function startGame() {
   if (state.started) {
     return;
   }
-  document.getElementById("characterSelect")?.classList.add("is-hidden");
   window.parent?.postMessage({ type: "stickman:start" }, window.location.origin);
   unlockAudio();
   playStartSound();
@@ -146,7 +164,18 @@ function buildHeadMaskFromBackground() {
   off.width = size;
   off.height = size;
   const octx = off.getContext("2d", { willReadFrequently: true });
-  octx.drawImage(headImage, 0, 0, size, size);
+  const crop = getHeadCropRect();
+  octx.drawImage(
+    headImage,
+    crop.x,
+    crop.y,
+    crop.w,
+    crop.h,
+    0,
+    0,
+    size,
+    size
+  );
   const img = octx.getImageData(0, 0, size, size);
   const data = img.data;
 
@@ -165,29 +194,22 @@ function buildHeadMaskFromBackground() {
     { r: 0, g: 0, b: 0 }
   );
 
-  const threshold = 78;
-  const whiteCutoff = 228;
-  const whiteDiffLimit = 30;
+  const threshold = 42;
+  const transparentCutoff = 12;
   const seen = new Uint8Array(size * size);
   const queue = [];
   let qIndex = 0;
 
-  function isNearWhite(r, g, b) {
-    const maxV = Math.max(r, g, b);
-    const minV = Math.min(r, g, b);
-    return maxV >= whiteCutoff && maxV - minV <= whiteDiffLimit;
-  }
-
   function isBackgroundLike(x, y) {
     const p = getPixelRgb(data, size, x, y);
+    if (p.a <= transparentCutoff) {
+      return true;
+    }
     const dr = p.r - bg.r;
     const dg = p.g - bg.g;
     const db = p.b - bg.b;
     const dist = Math.sqrt(dr * dr + dg * dg + db * db);
     if (dist <= threshold) {
-      return true;
-    }
-    if (isNearWhite(p.r, p.g, p.b)) {
       return true;
     }
     return false;
@@ -244,7 +266,20 @@ function buildHeadMaskFromBackground() {
 
 function getPixelRgb(data, size, x, y) {
   const i = (y * size + x) * 4;
-  return { r: data[i], g: data[i + 1], b: data[i + 2] };
+  return { r: data[i], g: data[i + 1], b: data[i + 2], a: data[i + 3] };
+}
+
+function getHeadCropRect() {
+  const character = getCurrentCharacterConfig();
+  const crop = character.headCrop || { x: 0, y: 0, w: 1, h: 1 };
+  const naturalW = headImage.naturalWidth || 1;
+  const naturalH = headImage.naturalHeight || 1;
+  return {
+    x: Math.max(0, Math.min(naturalW - 1, naturalW * crop.x)),
+    y: Math.max(0, Math.min(naturalH - 1, naturalH * crop.y)),
+    w: Math.max(1, Math.min(naturalW, naturalW * crop.w)),
+    h: Math.max(1, Math.min(naturalH, naturalH * crop.h))
+  };
 }
 
 function handleJumpInput() {
@@ -349,6 +384,12 @@ document.querySelectorAll(".character-card").forEach((card) => {
 document.getElementById("characterStartButton")?.addEventListener("click", (event) => {
   event.preventDefault();
   event.stopPropagation();
+  if (state.started && !state.running) {
+    unlockAudio();
+    playStartSound();
+    resetGame();
+    return;
+  }
   startGame();
 });
 
@@ -371,4 +412,5 @@ updateScore();
 updatePauseButton();
 updateDebugDistanceButton();
 updateSecretProgressBar();
+updateCharacterSelectState();
 requestAnimationFrame(loop);

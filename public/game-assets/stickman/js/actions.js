@@ -13,6 +13,7 @@
   state.secretDistance = 0;
   state.secretSavedSceneIndex = sceneOrder[0];
   state.secretCoinTimer = 0;
+  state.doubleScoreUntil = 0;
   state.scoreSubmitted = false;
   state.lockReleasedForRun = false;
   if (typeof leaderboardResetRun === "function") {
@@ -87,7 +88,38 @@ function useChargedSkill() {
     activateChargedShield();
     return;
   }
+  if (skill.skillType === "doubleScore") {
+    activateDoubleScore();
+    return;
+  }
   enterSecretRealm();
+}
+
+function hasDoubleScore() {
+  return performance.now() < state.doubleScoreUntil;
+}
+
+function getScoreMultiplier() {
+  return hasDoubleScore() ? 2 : 1;
+}
+
+function activateDoubleScore() {
+  if (
+    !state.started ||
+    !state.running ||
+    state.paused ||
+    !state.secretReady ||
+    state.inSecretRealm
+  ) {
+    return;
+  }
+
+  state.secretReady = false;
+  state.secretCharge = 0;
+  state.doubleScoreUntil = performance.now() + doubleScoreDurationMs;
+  if (typeof updateSecretProgressBar === "function") {
+    updateSecretProgressBar();
+  }
 }
 
 function activateChargedShield() {
@@ -103,7 +135,7 @@ function activateChargedShield() {
 
   state.secretReady = false;
   state.secretCharge = 0;
-  activateShield();
+  activateShield(shieldDurationMs * 2, "pdh");
   if (typeof updateSecretProgressBar === "function") {
     updateSecretProgressBar();
   }
@@ -142,6 +174,7 @@ function enterSecretRealm() {
   pets.length = 0;
   state.shieldHits = 0;
   state.shieldUntil = 0;
+  state.shieldVisual = "ring";
   if (typeof addSecretCoinColumn === "function") {
     for (let i = 0; i < 8; i += 1) {
       addSecretCoinColumn(canvas.width + 40 + i * secretCoinSpacing);
@@ -180,11 +213,13 @@ function hasShield() {
 function consumeShield() {
   state.shieldHits = 0;
   state.shieldUntil = 0;
+  state.shieldVisual = "ring";
 }
 
-function activateShield() {
+function activateShield(durationMs = shieldDurationMs, visual = "ring") {
   state.shieldHits = 1;
-  state.shieldUntil = performance.now() + shieldDurationMs;
+  state.shieldUntil = performance.now() + durationMs;
+  state.shieldVisual = visual;
   playShieldAudio();
 }
 

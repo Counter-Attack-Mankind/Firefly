@@ -245,7 +245,7 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
     const dx = cx - closestX;
     const dy = cy - closestY;
     if (dx * dx + dy * dy < c.r * c.r) {
-      state.score += coinBonus;
+      state.score += coinBonus * getScoreMultiplier();
       if (!c.secret) {
         addSecretCharge(secretChargePerCoin);
       }
@@ -337,7 +337,7 @@ if (c.warning) {
   if (state.inSecretRealm) {
     state.secretDistance += runDistance;
   }
-  state.score += runDistance;
+  state.score += runDistance * getScoreMultiplier();
   if (state.inSecretRealm && state.secretDistance >= secretRealmDistance) {
     exitSecretRealm();
   }

@@ -14,7 +14,9 @@ const coinBonus = 10;
 const highScoreKey = "stickman_runner_highscore_v1";
 const powerupWarningMs = 2000;
 const secretChargeMax = 400;       //金币技能数量
-const shieldSkillChargeMax = 200;
+const shieldSkillChargeMax = 200;    //pdh技能
+const doubleScoreSkillChargeMax = 200;
+const doubleScoreDurationMs = 10000;
 const secretChargePerCoin = 1;
 const secretRealmDistance = 100;
 const secretCoinSpacing = 62;
@@ -104,6 +106,7 @@ const characterConfigs = {
     name: "LSJ",
     headSrc: "character_move/lsj.png",
     fallbackHeadSrc: "character_move/lsj.jpg",
+    headCrop: { x: 0, y: 0, w: 1, h: 1, scale: 1 },
     skillType: "dream",
     skillName: "秘境能量",
     skillOrb: "秘",
@@ -116,11 +119,25 @@ const characterConfigs = {
     name: "PDH",
     headSrc: "character_move/pdh.png",
     fallbackHeadSrc: "character_move/pdh.png",
+    headCrop: { x: 0, y: 0, w: 1, h: 1, scale: 1 },
     skillType: "shield",
     skillName: "护盾能量",
     skillOrb: "盾",
     chargeMax: shieldSkillChargeMax,
     readyText: "按 E 召唤护盾",
+    chargingText: "收集金币充能"
+  },
+  js: {
+    id: "js",
+    name: "JS",
+    headSrc: "character_move/js.png",
+    fallbackHeadSrc: "character_move/js.png",
+    headCrop: { x: 0.08, y: 0, w: 0.84, h: 0.74, scale: 1.08 },
+    skillType: "doubleScore",
+    skillName: "双倍能量",
+    skillOrb: "双",
+    chargeMax: doubleScoreSkillChargeMax,
+    readyText: "按 E 双倍得分",
     chargingText: "收集金币充能"
   }
 };
@@ -143,6 +160,8 @@ const cactusImage = new Image();
 cactusImage.src = "character_move/cactus.png";
 const roadblocksImage = new Image();
 roadblocksImage.src = "character_move/roadblocks.png";
+const pdhSkillImage = new Image();
+pdhSkillImage.src = "character_move/pdh_skill.png";
 
 const pets = [];
 const petFollowDurationMs = 10000;
