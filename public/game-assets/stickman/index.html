@@ -9,6 +9,24 @@
   <body>
     <div class="game-stage">
       <canvas id="gameCanvas" width="960" height="420"></canvas>
+      <div id="characterSelect" class="character-select">
+        <div class="character-select-panel">
+          <div class="character-select-title">选择角色</div>
+          <div class="character-options">
+            <button class="character-card is-active" type="button" data-character-id="lsj">
+              <img src="character_move/lsj.png" alt="" />
+              <span>LSJ</span>
+              <small>400 金币进入秘境</small>
+            </button>
+            <button class="character-card" type="button" data-character-id="pdh">
+              <img src="character_move/pdh.png" alt="" />
+              <span>PDH</span>
+              <small>200 金币召唤护盾</small>
+            </button>
+          </div>
+          <button id="characterStartButton" class="character-start-button" type="button">开始游戏</button>
+        </div>
+      </div>
       <div class="hud">
         <div id="score">分数: 0 | 最高分: 0</div>
       </div>
@@ -62,4 +80,3 @@
     <script src="./js/app.js"></script>
   </body>
 </html>
-

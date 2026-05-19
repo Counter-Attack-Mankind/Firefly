@@ -8,6 +8,7 @@
   distance: 0,
   highScore: loadHighScore(),
   leaderboardTopScore: 0,
+  characterId: "lsj",
   secretCharge: 0,
   secretReady: false,
   inSecretRealm: false,

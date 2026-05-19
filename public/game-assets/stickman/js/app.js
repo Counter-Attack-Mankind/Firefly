@@ -36,27 +36,54 @@ function updateSecretProgressBar() {
   const progressText = document.getElementById("secretProgressText");
   const progressHint = document.getElementById("secretProgressHint");
   const progressRoot = document.querySelector(".secret-progress");
+  const skillName = document.querySelector(".secret-progress-topline span:first-child");
+  const skillOrb = document.querySelector(".secret-progress-orb span");
+  const skill = getCurrentCharacterConfig();
   const progress = state.inSecretRealm
     ? Math.min(100, Math.floor((state.secretDistance / secretRealmDistance) * 100))
-    : Math.min(100, Math.floor((state.secretCharge / secretChargeMax) * 100));
+    : Math.min(100, Math.floor((state.secretCharge / skill.chargeMax) * 100));
 
   if (progressFill) {
     progressFill.style.width = `${progress}%`;
   }
+  if (skillName) {
+    skillName.textContent = skill.skillName;
+  }
+  if (skillOrb) {
+    skillOrb.textContent = skill.skillOrb;
+  }
   if (progressText) {
     progressText.textContent = state.inSecretRealm
       ? `${Math.floor(state.secretDistance)} / ${secretRealmDistance}m`
-      : `${Math.floor(state.secretCharge)} / ${secretChargeMax}`;
+      : `${Math.floor(state.secretCharge)} / ${skill.chargeMax}`;
   }
   if (progressHint) {
     progressHint.textContent = state.inSecretRealm
       ? "秘境奔跑中"
       : state.secretReady
-        ? "按 E 释放秘境"
-        : "收集金币充能";
+        ? skill.readyText
+        : skill.chargingText;
   }
   progressRoot?.classList.toggle("is-ready", state.secretReady && !state.inSecretRealm);
   progressRoot?.classList.toggle("is-active", state.inSecretRealm);
+}
+
+function getCurrentCharacterConfig() {
+  return characterConfigs[state.characterId] || characterConfigs.lsj;
+}
+
+function setCharacter(characterId) {
+  const character = characterConfigs[characterId] || characterConfigs.lsj;
+  state.characterId = character.id;
+  state.secretCharge = 0;
+  state.secretReady = false;
+  headMaskCanvas = null;
+  headImage.src = character.headSrc;
+
+  document.querySelectorAll(".character-card").forEach((card) => {
+    card.classList.toggle("is-active", card.getAttribute("data-character-id") === character.id);
+  });
+  updateSecretProgressBar();
 }
 
 function togglePause() {
@@ -95,6 +122,7 @@ function startGame() {
   if (state.started) {
     return;
   }
+  document.getElementById("characterSelect")?.classList.add("is-hidden");
   window.parent?.postMessage({ type: "stickman:start" }, window.location.origin);
   unlockAudio();
   playStartSound();
@@ -242,7 +270,9 @@ window.addEventListener("keydown", (e) => {
   }
   if (!state.started) {
     e.preventDefault();
-    startGame();
+    if (e.key === "Enter") {
+      startGame();
+    }
     return;
   }
   if (e.key.toLowerCase() === "p") {
@@ -252,7 +282,7 @@ window.addEventListener("keydown", (e) => {
   }
   if (e.key.toLowerCase() === "e") {
     e.preventDefault();
-    enterSecretRealm();
+    useChargedSkill();
     return;
   }
   if (e.key.toLowerCase() === "r") {
@@ -306,14 +336,36 @@ document.getElementById("debugDistanceButton")?.addEventListener("pointerdown", 
   updateDebugDistanceButton();
 });
 
+document.getElementById("characterSelect")?.addEventListener("pointerdown", (event) => {
+  event.stopPropagation();
+});
+
+document.querySelectorAll(".character-card").forEach((card) => {
+  card.addEventListener("click", () => {
+    setCharacter(card.getAttribute("data-character-id") || "lsj");
+  });
+});
+
+document.getElementById("characterStartButton")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  startGame();
+});
+
 headImage.addEventListener("load", () => {
   buildHeadMaskFromBackground();
 });
 
 headImage.addEventListener("error", () => {
-  console.warn("无法加载 character_move/lsj.(jpg|png)，使用默认灰色头部。");
+  const character = getCurrentCharacterConfig();
+  if (headImage.src.endsWith(character.fallbackHeadSrc)) {
+    console.warn("无法加载角色头像，使用默认灰色头部。");
+    return;
+  }
+  headImage.src = character.fallbackHeadSrc;
 });
 
+setCharacter(state.characterId);
 state.nextSceneIndex = pickNextSceneIndex(state.sceneIndex);
 updateScore();
 updatePauseButton();

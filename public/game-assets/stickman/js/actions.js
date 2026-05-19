@@ -73,20 +73,51 @@ function addSecretCharge(amount) {
   if (state.inSecretRealm) {
     return;
   }
-  state.secretCharge = Math.min(secretChargeMax, state.secretCharge + amount);
-  state.secretReady = state.secretCharge >= secretChargeMax;
+  const skill = getCurrentCharacterConfig();
+  state.secretCharge = Math.min(skill.chargeMax, state.secretCharge + amount);
+  state.secretReady = state.secretCharge >= skill.chargeMax;
+  if (typeof updateSecretProgressBar === "function") {
+    updateSecretProgressBar();
+  }
+}
+
+function useChargedSkill() {
+  const skill = getCurrentCharacterConfig();
+  if (skill.skillType === "shield") {
+    activateChargedShield();
+    return;
+  }
+  enterSecretRealm();
+}
+
+function activateChargedShield() {
+  if (
+    !state.started ||
+    !state.running ||
+    state.paused ||
+    !state.secretReady ||
+    state.inSecretRealm
+  ) {
+    return;
+  }
+
+  state.secretReady = false;
+  state.secretCharge = 0;
+  activateShield();
   if (typeof updateSecretProgressBar === "function") {
     updateSecretProgressBar();
   }
 }
 
 function enterSecretRealm() {
+  const skill = getCurrentCharacterConfig();
   if (
     !state.started ||
     !state.running ||
     state.paused ||
     !state.secretReady ||
     state.inSecretRealm ||
+    skill.skillType !== "dream" ||
     state.sceneTransitionPhase !== "none"
   ) {
     return;

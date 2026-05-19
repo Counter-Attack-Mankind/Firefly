@@ -14,6 +14,7 @@ const coinBonus = 10;
 const highScoreKey = "stickman_runner_highscore_v1";
 const powerupWarningMs = 2000;
 const secretChargeMax = 400;       //金币技能数量
+const shieldSkillChargeMax = 200;
 const secretChargePerCoin = 1;
 const secretRealmDistance = 100;
 const secretCoinSpacing = 62;
@@ -97,6 +98,32 @@ const sceneThemes = [
   }
 ];
 const secretSceneIndex = sceneThemes.findIndex((theme) => theme.id === "dream");
+const characterConfigs = {
+  lsj: {
+    id: "lsj",
+    name: "LSJ",
+    headSrc: "character_move/lsj.png",
+    fallbackHeadSrc: "character_move/lsj.jpg",
+    skillType: "dream",
+    skillName: "秘境能量",
+    skillOrb: "秘",
+    chargeMax: secretChargeMax,
+    readyText: "按 E 释放秘境",
+    chargingText: "收集金币充能"
+  },
+  pdh: {
+    id: "pdh",
+    name: "PDH",
+    headSrc: "character_move/pdh.png",
+    fallbackHeadSrc: "character_move/pdh.png",
+    skillType: "shield",
+    skillName: "护盾能量",
+    skillOrb: "盾",
+    chargeMax: shieldSkillChargeMax,
+    readyText: "按 E 召唤护盾",
+    chargingText: "收集金币充能"
+  }
+};
 
 const headImage = new Image();
 const cannonballs = [];
@@ -143,10 +170,7 @@ dreamAudio.preload = "auto";
 dreamAudio.volume = 0.72;
 
 //头像载入
-headImage.src = "character_move/lsj.jpg";
-headImage.onerror = () => {
-  headImage.src = "character_move/lsj.png";
-};
+headImage.src = characterConfigs.lsj.headSrc;
 
 let headMaskCanvas = null;
 let audioCtx = null;
