@@ -126,6 +126,17 @@ import { url } from "@/utils/url-utils";
     document.body.classList.toggle("stickman-page-lock", locked);
   }
 
+  function setFullscreenUi(active: boolean) {
+    shell?.classList.toggle("is-game-fullscreen", active);
+    if (fullscreenButton) {
+      fullscreenButton.textContent = active ? "退出全屏" : "全屏";
+    }
+    frame?.contentWindow?.postMessage(
+      { type: "stickman:parent-fullscreen", active },
+      window.location.origin
+    );
+  }
+
   frame?.addEventListener("load", () => {
     frame.focus();
     frame.contentWindow?.focus();
@@ -139,18 +150,17 @@ import { url } from "@/utils/url-utils";
   }
 
   fullscreenButton?.addEventListener("click", async () => {
-    const target = shell ?? frame;
-    if (!target) {
+    if (!shell) {
       return;
     }
     try {
       if (document.fullscreenElement) {
         await document.exitFullscreen();
-        fullscreenButton.textContent = "全屏";
+        setFullscreenUi(false);
         return;
       }
-      await target.requestFullscreen();
-      fullscreenButton.textContent = "退出全屏";
+      await shell.requestFullscreen();
+      setFullscreenUi(true);
       frame?.focus();
       frame?.contentWindow?.focus();
     } catch (error) {
@@ -159,10 +169,7 @@ import { url } from "@/utils/url-utils";
   });
 
   document.addEventListener("fullscreenchange", () => {
-    if (!fullscreenButton) {
-      return;
-    }
-    fullscreenButton.textContent = document.fullscreenElement ? "退出全屏" : "全屏";
+    setFullscreenUi(document.fullscreenElement === shell);
   });
 
   document.addEventListener("keydown", (event) => {
@@ -470,25 +477,64 @@ import { url } from "@/utils/url-utils";
   }
 
   #stickman-game-shell:fullscreen {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
-    gap: 14px;
+    display: block;
     width: 100vw;
     height: 100vh;
     margin-left: 0;
-    padding: 12px;
+    padding: 0;
     transform: none;
-    background: var(--page-bg);
+    overflow: hidden;
+    background: #020617;
   }
 
-  #stickman-game-shell:fullscreen #stickman-game-frame {
-    height: calc(100vh - 94px);
+  #stickman-game-shell:fullscreen .stickman-game-panel {
+    width: 100vw;
+    height: 100vh;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #020617;
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
   #stickman-game-shell:fullscreen .stickman-leaderboard {
-    position: static;
-    max-height: calc(100vh - 24px);
-    overflow: auto;
+    display: none !important;
+  }
+
+  #stickman-game-shell:fullscreen .stickman-game-toolbar {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 20;
+    display: block;
+    margin: 0;
+    pointer-events: none;
+  }
+
+  #stickman-game-shell:fullscreen .stickman-game-toolbar > div {
+    display: none !important;
+  }
+
+  #stickman-game-shell:fullscreen #stickman-fullscreen-button {
+    min-width: auto;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.42);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.62);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.24);
+    font-size: 13px;
+    pointer-events: auto;
+    backdrop-filter: blur(8px);
+  }
+
+  #stickman-game-shell:fullscreen #stickman-game-frame {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    background: #020617;
   }
 
   @media (max-width: 820px) {

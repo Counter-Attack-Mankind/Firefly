@@ -280,6 +280,16 @@ window.addEventListener("keyup", (e) => {
   }
 });
 
+window.addEventListener("message", (event) => {
+  if (event.origin !== window.location.origin) {
+    return;
+  }
+  if (event.data?.type !== "stickman:parent-fullscreen") {
+    return;
+  }
+  document.body.classList.toggle("parent-fullscreen-mode", Boolean(event.data.active));
+});
+
 canvas.addEventListener("pointerdown", () => {
   if (state.mobileControls && state.started && !state.running) {
     restartRun();
