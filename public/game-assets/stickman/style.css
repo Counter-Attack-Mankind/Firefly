@@ -15,6 +15,41 @@ body {
   overflow: hidden;
 }
 
+.page-layout {
+  position: relative;
+  width: min(1200px, 100%);
+  margin: 0 auto;
+}
+
+.play-area {
+  min-width: 0;
+  width: 100%;
+}
+
+.debug-tools {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 14px);
+  z-index: 20;
+  width: 112px;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(236, 246, 255, 0.82)),
+    radial-gradient(circle at 0 0, rgba(37, 99, 235, 0.12), transparent 34%);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+}
+
+.debug-tools-title {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
 .hud {
   position: absolute;
   top: 14px;
@@ -486,17 +521,15 @@ body {
 }
 
 .debug-distance-button {
-  position: absolute;
-  left: 16px;
-  bottom: 16px;
-  z-index: 6;
-  min-width: 76px;
-  height: 36px;
-  padding: 0 12px;
-  border: 1px solid rgba(15, 23, 42, 0.18);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 11px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(236, 246, 255, 0.86)),
+    radial-gradient(circle at 0 0, rgba(37, 99, 235, 0.14), transparent 38%);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
   color: #0f172a;
   cursor: pointer;
   font-size: 12px;
@@ -510,16 +543,159 @@ body {
     box-shadow 160ms ease;
 }
 
-.debug-distance-button:hover {
+.mobile-controls-button {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 11px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(236, 246, 255, 0.86)),
+    radial-gradient(circle at 0 0, rgba(37, 99, 235, 0.14), transparent 38%);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  backdrop-filter: blur(8px);
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.debug-distance-button:hover,
+.mobile-controls-button:hover {
   transform: translateY(-1px);
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.22);
 }
 
-.debug-distance-button.is-active {
+.debug-distance-button.is-active,
+.mobile-controls-button.is-active {
   border-color: rgba(245, 158, 11, 0.72);
   background: rgba(245, 158, 11, 0.94);
   color: #111827;
+}
+
+.mobile-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 7;
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  display: none;
+  pointer-events: none;
+  touch-action: none;
+}
+
+.mobile-controls.is-active {
+  display: block;
+}
+
+.mobile-action {
+  position: absolute;
+  width: clamp(56px, 7.8vw, 76px);
+  height: clamp(56px, 7.8vw, 76px);
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.48);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.42), transparent 32%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.62), rgba(15, 23, 42, 0.34));
+  box-shadow:
+    0 12px 26px rgba(15, 23, 42, 0.26),
+    inset 0 0 18px rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: clamp(12px, 1.15vw, 14px);
+  font-weight: 900;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  backdrop-filter: blur(5px);
+}
+
+.mobile-action::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: inherit;
+}
+
+.mobile-action:active,
+.mobile-action.is-pressed {
+  transform: scale(0.94);
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.52), transparent 32%),
+    linear-gradient(180deg, rgba(245, 158, 11, 0.76), rgba(14, 165, 233, 0.4));
+}
+
+.mobile-action-slide {
+  left: clamp(22px, 5vw, 58px);
+  bottom: clamp(24px, 8vw, 72px);
+}
+
+.mobile-action-jump {
+  right: clamp(22px, 5vw, 58px);
+  bottom: clamp(24px, 8vw, 72px);
+  width: clamp(66px, 9.2vw, 90px);
+  height: clamp(66px, 9.2vw, 90px);
+}
+
+.mobile-action-skill {
+  --skill-progress: 0;
+  left: clamp(18px, 4vw, 46px);
+  top: 42%;
+  width: clamp(52px, 7.2vw, 70px);
+  height: clamp(52px, 7.2vw, 70px);
+  transform: translateY(-50%);
+  border-color: rgba(255, 238, 166, 0.62);
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.44), transparent 32%),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.68), rgba(168, 85, 247, 0.44));
+}
+
+.mobile-action-skill::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: inherit;
+  background:
+    conic-gradient(
+      from -90deg,
+      rgba(250, 204, 21, 0.95) calc(var(--skill-progress) * 1%),
+      rgba(255, 255, 255, 0.18) 0
+    );
+  mask: radial-gradient(circle, transparent 61%, #000 63%);
+  -webkit-mask: radial-gradient(circle, transparent 61%, #000 63%);
+  filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.3));
+  pointer-events: none;
+}
+
+.mobile-action-skill.is-ready {
+  border-color: rgba(255, 245, 157, 0.96);
+  box-shadow:
+    0 0 18px rgba(250, 204, 21, 0.78),
+    0 0 36px rgba(56, 189, 248, 0.34),
+    inset 0 0 18px rgba(255, 255, 255, 0.18);
+}
+
+.mobile-action-skill.is-ready::after {
+  background: conic-gradient(from -90deg, #fef08a, #38bdf8, #a855f7, #fef08a);
+  filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.85));
+}
+
+.mobile-action-skill:active,
+.mobile-action-skill.is-pressed {
+  transform: translateY(-50%) scale(0.94);
 }
 
 .pause-icon {
@@ -561,6 +737,24 @@ body {
   max-width: 100%;
   text-align: center;
   line-height: 1.5;
+}
+
+@media (max-width: 1480px) {
+  body {
+    align-items: stretch;
+  }
+
+  .page-layout {
+    width: 100%;
+  }
+
+  .debug-tools {
+    position: static;
+    width: min(420px, 100%);
+    grid-template-columns: auto 1fr 1fr;
+    align-items: center;
+    margin-bottom: 10px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -629,9 +823,14 @@ body {
   }
 
   .debug-distance-button {
-    left: 10px;
-    bottom: 10px;
-    min-width: 68px;
+    width: 100%;
+    height: 34px;
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .mobile-controls-button {
+    width: 100%;
     height: 34px;
     padding: 0 10px;
     font-size: 11px;

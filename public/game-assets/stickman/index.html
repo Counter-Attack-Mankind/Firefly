@@ -7,71 +7,98 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <div class="game-stage">
-      <canvas id="gameCanvas" width="960" height="420"></canvas>
-      <div id="characterSelect" class="character-select">
-        <div class="character-select-panel">
-          <div class="character-select-title">选择角色</div>
-          <div class="character-options">
-            <button class="character-card is-active" type="button" data-character-id="lsj">
-              <img src="character/lsj/lsj.png" alt="" />
-              <span>LSJ</span>
-              <small>400 金币进入秘境</small>
+    <main class="page-layout">
+      <aside class="debug-tools" aria-label="调试工具">
+        <div class="debug-tools-title">调试工具</div>
+        <button
+          id="debugDistanceButton"
+          class="debug-distance-button"
+          type="button"
+          aria-pressed="false"
+          title="显示相邻障碍物距离"
+        >
+          DEBUG
+        </button>
+        <button
+          id="mobileControlsButton"
+          class="mobile-controls-button"
+          type="button"
+          aria-pressed="false"
+          title="Mobile controls"
+        >
+          MOBILE
+        </button>
+      </aside>
+      <section class="play-area">
+        <div class="game-stage">
+          <canvas id="gameCanvas" width="960" height="420"></canvas>
+          <div id="characterSelect" class="character-select">
+            <div class="character-select-panel">
+              <div class="character-select-title">选择角色</div>
+              <div class="character-options">
+                <button class="character-card is-active" type="button" data-character-id="lsj">
+                  <img src="character/lsj/lsj.png" alt="" />
+                  <span>LSJ</span>
+                  <small>400 金币进入秘境</small>
+                </button>
+              <button class="character-card" type="button" data-character-id="pdh">
+                <img src="character/pdh/pdh.png" alt="" />
+                <span>PDH</span>
+                <small>200 金币召唤护盾</small>
+              </button>
+              <button class="character-card" type="button" data-character-id="js">
+                <img src="character/js/js.png" alt="" />
+                <span>JS</span>
+                <small>200 金币双倍得分 10s</small>
+              </button>
+            </div>
+              <button id="characterStartButton" class="character-start-button" type="button">开始游戏</button>
+            </div>
+          </div>
+          <div class="hud">
+            <div id="score">分数: 0 | 最高分: 0</div>
+          </div>
+          <div class="secret-progress" aria-label="秘境进度">
+            <div class="secret-progress-orb">
+              <span>秘</span>
+            </div>
+            <div class="secret-progress-body">
+              <div class="secret-progress-topline">
+                <span>秘境能量</span>
+                <span id="secretProgressText">0 / 400</span>
+              </div>
+              <div class="secret-progress-track">
+                <div id="secretProgressFill" class="secret-progress-fill"></div>
+              </div>
+              <div id="secretProgressHint" class="secret-progress-hint">收集金币充能</div>
+            </div>
+          </div>
+          <button
+            id="pauseButton"
+            class="pause-button"
+            type="button"
+            aria-label="暂停游戏"
+            title="暂停游戏"
+          >
+            <span class="pause-icon pause-icon-pause" aria-hidden="true"></span>
+          </button>
+          <div id="mobileControls" class="mobile-controls" aria-hidden="true">
+            <button id="mobileSlideButton" class="mobile-action mobile-action-slide" type="button" aria-label="下铲">
+              <span>下铲</span>
             </button>
-          <button class="character-card" type="button" data-character-id="pdh">
-            <img src="character/pdh/pdh.png" alt="" />
-            <span>PDH</span>
-            <small>200 金币召唤护盾</small>
-          </button>
-          <button class="character-card" type="button" data-character-id="js">
-            <img src="character/js/js.png" alt="" />
-            <span>JS</span>
-            <small>200 金币双倍得分 10s</small>
-          </button>
-        </div>
-          <button id="characterStartButton" class="character-start-button" type="button">开始游戏</button>
-        </div>
-      </div>
-      <div class="hud">
-        <div id="score">分数: 0 | 最高分: 0</div>
-      </div>
-      <div class="secret-progress" aria-label="秘境进度">
-        <div class="secret-progress-orb">
-          <span>秘</span>
-        </div>
-        <div class="secret-progress-body">
-          <div class="secret-progress-topline">
-            <span>秘境能量</span>
-            <span id="secretProgressText">0 / 400</span>
+            <button id="mobileSkillButton" class="mobile-action mobile-action-skill" type="button" aria-label="释放技能">
+              <span>技能</span>
+            </button>
+            <button id="mobileJumpButton" class="mobile-action mobile-action-jump" type="button" aria-label="跳跃">
+              <span>跳跃</span>
+            </button>
           </div>
-          <div class="secret-progress-track">
-            <div id="secretProgressFill" class="secret-progress-fill"></div>
-          </div>
-          <div id="secretProgressHint" class="secret-progress-hint">收集金币充能</div>
         </div>
-      </div>
-      <button
-        id="pauseButton"
-        class="pause-button"
-        type="button"
-        aria-label="暂停游戏"
-        title="暂停游戏"
-      >
-        <span class="pause-icon pause-icon-pause" aria-hidden="true"></span>
-      </button>
-      <button
-        id="debugDistanceButton"
-        class="debug-distance-button"
-        type="button"
-        aria-pressed="false"
-        title="显示相邻障碍物距离"
-      >
-        DEBUG
-      </button>
-    </div>
-    <div class="tips">
-      空格 / W / ↑ / 点击跳跃（支持二段跳），S / ↓ 可空中速降/地面下铲，收集金币满400按E可开技能进入秘境
-    </div>
+        <div class="tips">
+          空格 / W / ↑ / 点击跳跃（支持二段跳），S / ↓ 可空中速降/地面下铲，收集金币满400按E可开技能进入秘境
+        </div>
+      </section>
+    </main>
     <script src="./js/config.js"></script>
     <script src="./js/storage.js"></script>
     <script src="./js/state.js"></script>

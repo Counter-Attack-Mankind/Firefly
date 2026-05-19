@@ -52,7 +52,8 @@
   nextPetScore: petSpawnEveryScore,
   scoreSubmitted: false,
   lockReleasedForRun: false,
-  debugDistances: false
+  debugDistances: false,
+  mobileControls: false
 
 };
 

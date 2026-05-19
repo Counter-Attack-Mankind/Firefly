@@ -32,6 +32,18 @@ function updateDebugDistanceButton() {
   debugButton.setAttribute("aria-pressed", state.debugDistances ? "true" : "false");
 }
 
+function updateMobileControlsButton() {
+  const mobileButton = document.getElementById("mobileControlsButton");
+  const mobileControls = document.getElementById("mobileControls");
+  if (!mobileButton || !mobileControls) {
+    return;
+  }
+  mobileButton.classList.toggle("is-active", state.mobileControls);
+  mobileButton.setAttribute("aria-pressed", state.mobileControls ? "true" : "false");
+  mobileControls.classList.toggle("is-active", state.mobileControls);
+  mobileControls.setAttribute("aria-hidden", state.mobileControls ? "false" : "true");
+}
+
 function updateSecretProgressBar() {
   const progressFill = document.getElementById("secretProgressFill");
   const progressText = document.getElementById("secretProgressText");
@@ -39,6 +51,7 @@ function updateSecretProgressBar() {
   const progressRoot = document.querySelector(".secret-progress");
   const skillName = document.querySelector(".secret-progress-topline span:first-child");
   const skillOrb = document.querySelector(".secret-progress-orb span");
+  const mobileSkillButton = document.getElementById("mobileSkillButton");
   const skill = getCurrentCharacterConfig();
   const progress = state.inSecretRealm
     ? Math.min(100, Math.floor((state.secretDistance / secretRealmDistance) * 100))
@@ -69,6 +82,11 @@ function updateSecretProgressBar() {
   }
   progressRoot?.classList.toggle("is-ready", state.secretReady && !state.inSecretRealm);
   progressRoot?.classList.toggle("is-active", state.inSecretRealm);
+  if (mobileSkillButton) {
+    mobileSkillButton.style.setProperty("--skill-progress", progress);
+    mobileSkillButton.classList.toggle("is-ready", state.secretReady && !state.inSecretRealm);
+    mobileSkillButton.classList.toggle("is-active", state.inSecretRealm);
+  }
 }
 
 function getCurrentCharacterConfig() {
@@ -135,6 +153,7 @@ function loop(timestamp) {
   }
   draw();
   updatePauseButton();
+  updateMobileControlsButton();
   updateCharacterSelectState();
   requestAnimationFrame(loop);
 }
@@ -249,6 +268,70 @@ document.getElementById("debugDistanceButton")?.addEventListener("pointerdown", 
   updateDebugDistanceButton();
 });
 
+document.getElementById("mobileControlsButton")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  state.mobileControls = !state.mobileControls;
+  state.downPressed = false;
+  updateMobileControlsButton();
+});
+
+function bindMobileActionButton(buttonId, handlers) {
+  const button = document.getElementById(buttonId);
+  if (!button) {
+    return;
+  }
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    button.setPointerCapture?.(event.pointerId);
+    button.classList.add("is-pressed");
+    handlers.down?.();
+  });
+  const release = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    button.classList.remove("is-pressed");
+    handlers.up?.();
+  };
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("lostpointercapture", () => {
+    button.classList.remove("is-pressed");
+    handlers.up?.();
+  });
+}
+
+bindMobileActionButton("mobileJumpButton", {
+  down: () => handleJumpInput()
+});
+
+bindMobileActionButton("mobileSlideButton", {
+  down: () => {
+    if (!state.started) {
+      startGame();
+      return;
+    }
+    if (!state.paused) {
+      state.downPressed = true;
+    }
+  },
+  up: () => {
+    state.downPressed = false;
+  }
+});
+
+bindMobileActionButton("mobileSkillButton", {
+  down: () => {
+    if (!state.started) {
+      startGame();
+      return;
+    }
+    unlockAudio();
+    useChargedSkill();
+  }
+});
+
 document.getElementById("characterSelect")?.addEventListener("pointerdown", (event) => {
   event.stopPropagation();
 });
@@ -293,6 +376,7 @@ state.nextSceneIndex = pickNextSceneIndex(state.sceneIndex);
 updateScore();
 updatePauseButton();
 updateDebugDistanceButton();
+updateMobileControlsButton();
 updateSecretProgressBar();
 updateCharacterSelectState();
 requestAnimationFrame(loop);
