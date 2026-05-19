@@ -60,6 +60,9 @@ function addJumpObstacleForScene(spawnX) {
   if (hasLowbarNearRange(spawnX, spawnX + w, lowbarJumpMinDistance)) {
     return;
   }
+  if (hasJumpObstacleNearRange(spawnX, spawnX + w, jumpObstacleMinDistance)) {
+    return;
+  }
   if (hasCliffNearRange(spawnX, spawnX + w, collectibleCliffPadding + 100)) {
     return;
   }

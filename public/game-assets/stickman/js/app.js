@@ -83,7 +83,6 @@ function setCharacter(characterId) {
   state.characterId = character.id;
   state.secretCharge = 0;
   state.secretReady = false;
-  headMaskCanvas = null;
   headImage.src = character.headSrc;
   if (character.shieldSkillImageSrc) {
     pdhSkillImage.src = character.shieldSkillImageSrc;
@@ -159,130 +158,6 @@ function releaseGamePageLock() {
     { type: "stickman:game-over", score: Math.floor(state.score) },
     window.location.origin
   );
-}
-
-function buildHeadMaskFromBackground() {
-  const size = 128;
-  const off = document.createElement("canvas");
-  off.width = size;
-  off.height = size;
-  const octx = off.getContext("2d", { willReadFrequently: true });
-  const crop = getHeadCropRect();
-  octx.drawImage(
-    headImage,
-    crop.x,
-    crop.y,
-    crop.w,
-    crop.h,
-    0,
-    0,
-    size,
-    size
-  );
-  const img = octx.getImageData(0, 0, size, size);
-  const data = img.data;
-
-  const corners = [
-    getPixelRgb(data, size, 0, 0),
-    getPixelRgb(data, size, size - 1, 0),
-    getPixelRgb(data, size, 0, size - 1),
-    getPixelRgb(data, size, size - 1, size - 1)
-  ];
-  const bg = corners.reduce(
-    (acc, c) => ({
-      r: acc.r + c.r / corners.length,
-      g: acc.g + c.g / corners.length,
-      b: acc.b + c.b / corners.length
-    }),
-    { r: 0, g: 0, b: 0 }
-  );
-
-  const threshold = 42;
-  const transparentCutoff = 12;
-  const seen = new Uint8Array(size * size);
-  const queue = [];
-  let qIndex = 0;
-
-  function isBackgroundLike(x, y) {
-    const p = getPixelRgb(data, size, x, y);
-    if (p.a <= transparentCutoff) {
-      return true;
-    }
-    const dr = p.r - bg.r;
-    const dg = p.g - bg.g;
-    const db = p.b - bg.b;
-    const dist = Math.sqrt(dr * dr + dg * dg + db * db);
-    if (dist <= threshold) {
-      return true;
-    }
-    return false;
-  }
-
-  function pushIfBackground(x, y) {
-    if (x < 0 || y < 0 || x >= size || y >= size) {
-      return;
-    }
-    const idx = y * size + x;
-    if (seen[idx]) {
-      return;
-    }
-    if (!isBackgroundLike(x, y)) {
-      return;
-    }
-    seen[idx] = 1;
-    queue.push(idx);
-  }
-
-  for (let x = 0; x < size; x += 1) {
-    pushIfBackground(x, 0);
-    pushIfBackground(x, size - 1);
-  }
-  for (let y = 1; y < size - 1; y += 1) {
-    pushIfBackground(0, y);
-    pushIfBackground(size - 1, y);
-  }
-  while (qIndex < queue.length) {
-    const idx = queue[qIndex];
-    qIndex += 1;
-    const x = idx % size;
-    const y = Math.floor(idx / size);
-    pushIfBackground(x + 1, y);
-    pushIfBackground(x - 1, y);
-    pushIfBackground(x, y + 1);
-    pushIfBackground(x, y - 1);
-  }
-
-  for (let y = 0; y < size; y += 1) {
-    for (let x = 0; x < size; x += 1) {
-      const idx = y * size + x;
-      if (!seen[idx]) {
-        continue;
-      }
-      const i = idx * 4;
-      data[i + 3] = 0;
-    }
-  }
-
-  octx.putImageData(img, 0, 0);
-  headMaskCanvas = off;
-}
-
-function getPixelRgb(data, size, x, y) {
-  const i = (y * size + x) * 4;
-  return { r: data[i], g: data[i + 1], b: data[i + 2], a: data[i + 3] };
-}
-
-function getHeadCropRect() {
-  const character = getCurrentCharacterConfig();
-  const crop = character.headCrop || { x: 0, y: 0, w: 1, h: 1 };
-  const naturalW = headImage.naturalWidth || 1;
-  const naturalH = headImage.naturalHeight || 1;
-  return {
-    x: Math.max(0, Math.min(naturalW - 1, naturalW * crop.x)),
-    y: Math.max(0, Math.min(naturalH - 1, naturalH * crop.y)),
-    w: Math.max(1, Math.min(naturalW, naturalW * crop.w)),
-    h: Math.max(1, Math.min(naturalH, naturalH * crop.h))
-  };
 }
 
 function handleJumpInput() {
@@ -394,10 +269,6 @@ document.getElementById("characterStartButton")?.addEventListener("click", (even
     return;
   }
   startGame();
-});
-
-headImage.addEventListener("load", () => {
-  buildHeadMaskFromBackground();
 });
 
 headImage.addEventListener("error", () => {

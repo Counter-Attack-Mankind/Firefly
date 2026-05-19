@@ -6,7 +6,6 @@ function getCharacterAudioSrc(fileName) {
 
 function getCharacterAudioSources(baseName, fallbackSrc) {
   return [
-    getCharacterAudioSrc(`${baseName}.m4a`),
     getCharacterAudioSrc(`${baseName}.mp3`),
     fallbackSrc
   ];
@@ -41,13 +40,13 @@ function playLoseAudio() {
   playAudioWithFallback(getCharacterAudioSources("die", "audio/lose.mp3"), 0.7, "失败音效");
 }
 function playStartSound() {
-  playAudioWithFallback(getCharacterAudioSources("begin", "audio/begin.m4a"), 0.6, "启动音效");
+  playAudioWithFallback(getCharacterAudioSources("begin", "audio/begin.mp3"), 0.6, "启动音效");
 }
 function playShieldAudio() {
-  playAudioWithFallback(getCharacterAudioSources("protect", "audio/protect.m4a"), 0.7, "护盾音效");
+  playAudioWithFallback(getCharacterAudioSources("protect", "audio/protect.mp3"), 0.7, "护盾音效");
 }
 function playSkillAudio() {
-  playAudioWithFallback(getCharacterAudioSources("skill", "audio/protect.m4a"), 0.7, "技能音效");
+  playAudioWithFallback(getCharacterAudioSources("skill", "audio/protect.mp3"), 0.7, "技能音效");
 }
 
 function ensureAudio() {

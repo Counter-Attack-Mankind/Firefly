@@ -23,6 +23,7 @@ const secretRealmDistance = 100;
 const secretCoinSpacing = 62;
 const lowbarCliffMinDistance = 820;
 const lowbarJumpMinDistance = 520;
+const jumpObstacleMinDistance = 200;
 const collectibleCliffPadding = 42;
 const petCoinMagnetRadius = 190;
 const petCoinMagnetSpeed = 0.28;
@@ -108,7 +109,7 @@ const characterConfigs = {
     assetBase: "character/lsj",
     headSrc: "character/lsj/lsj.png",
     fallbackHeadSrc: "character_move/lsj.png",
-    headCrop: { x: 0, y: 0, w: 1, h: 1, scale: 1 },
+    headCrop: { x: 0, y: 0, w: 1, h: 1, scale: 1, offsetY: 0 },
     skillType: "dream",
     skillName: "秘境能量",
     skillOrb: "秘",
@@ -124,7 +125,7 @@ const characterConfigs = {
     fallbackHeadSrc: "character_move/pdh.png",
     shieldSkillImageSrc: "character/pdh/pdh_skill.png",
     fallbackShieldSkillImageSrc: "character_move/pdh_skill.png",
-    headCrop: { x: 0, y: 0, w: 1, h: 1, scale: 1 },
+    headCrop: { x: 0, y: 0, w: 1, h: 1, scale: 1, offsetY: 5 },
     skillType: "shield",
     skillName: "护盾能量",
     skillOrb: "盾",
@@ -138,7 +139,7 @@ const characterConfigs = {
     assetBase: "character/js",
     headSrc: "character/js/js.png",
     fallbackHeadSrc: "character_move/js.png",
-    headCrop: { x: 0.08, y: 0, w: 0.84, h: 0.74, scale: 1.08 },
+    headCrop: { x: 0.08, y: 0, w: 0.84, h: 0.74, scale: 1.08, offsetY: 6 },
     skillType: "doubleScore",
     skillName: "双倍能量",
     skillOrb: "双",
@@ -178,10 +179,10 @@ const petMaxWanderX = 46;       // 相对主人左右最大游走
 const petMaxWanderY = 34;       // 相对主人上下最大游走
 
 // 音频载入
-const startAudio = new Audio("audio/begin.m4a");
+const startAudio = new Audio("audio/begin.mp3");
 startAudio.preload = "auto";
 startAudio.volume = 0.6;
-const shieldAudio = new Audio("audio/protect.m4a");
+const shieldAudio = new Audio("audio/protect.mp3");
 shieldAudio.preload = "auto";
 shieldAudio.volume = 0.7;
 const loseAudio = new Audio("audio/lose.mp3");
@@ -197,6 +198,5 @@ dreamAudio.volume = 0.72;
 //头像载入
 headImage.src = characterConfigs.lsj.headSrc;
 
-let headMaskCanvas = null;
 let audioCtx = null;
 let audioUnlocked = false;

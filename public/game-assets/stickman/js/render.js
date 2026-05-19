@@ -506,27 +506,14 @@ if (leftLegFront) {
   const headDrawHalf = headDrawSize / 2;
   // Head anchor: apply the same translation for all states so the head stays
   // tightly connected to the torso line endpoint.
-  ctx.translate(0, -half + 2);
+  ctx.translate(0, -half + 2 + (character.headCrop?.offsetY || 0));
 
   if (headRotation !== 0) {
     ctx.rotate(headRotation);
   }
 
-  if (headMaskCanvas) {
-    ctx.drawImage(headMaskCanvas, -headDrawHalf, -headDrawHalf, headDrawSize, headDrawSize);
-  } else if (headImage.complete && headImage.naturalWidth > 0) {
-    const crop = getHeadCropRect();
-    ctx.drawImage(
-      headImage,
-      crop.x,
-      crop.y,
-      crop.w,
-      crop.h,
-      -headDrawHalf,
-      -headDrawHalf,
-      headDrawSize,
-      headDrawSize
-    );
+  if (headImage.complete && headImage.naturalWidth > 0) {
+    ctx.drawImage(headImage, -headDrawHalf, -headDrawHalf, headDrawSize, headDrawSize);
   } else {
     ctx.fillStyle = "#cccccc";
     ctx.fillRect(-headDrawHalf, -headDrawHalf, headDrawSize, headDrawSize);
