@@ -264,7 +264,6 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
     }
     if (isColliding(playerHitbox(), p)) {
       activateShield();
-      playShieldPickupSound();
       powerups.splice(i, 1);
     }
   }

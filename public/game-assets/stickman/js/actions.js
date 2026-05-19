@@ -135,7 +135,7 @@ function activateChargedShield() {
 
   state.secretReady = false;
   state.secretCharge = 0;
-  activateShield(shieldDurationMs * 2, "pdh");
+  activateShield(shieldDurationMs * 2, "pdh", "skill");
   if (typeof updateSecretProgressBar === "function") {
     updateSecretProgressBar();
   }
@@ -216,10 +216,19 @@ function consumeShield() {
   state.shieldVisual = "ring";
 }
 
-function activateShield(durationMs = shieldDurationMs, visual = "ring") {
+function activateShield(durationMs = shieldDurationMs, visual = "ring", soundType = "protect") {
+  if (hasShield() && state.shieldVisual === "pdh" && visual !== "pdh") {
+    state.shieldUntil += activeShieldPickupBonusMs;
+    playShieldAudio();
+    return;
+  }
   state.shieldHits = 1;
   state.shieldUntil = performance.now() + durationMs;
   state.shieldVisual = visual;
+  if (soundType === "skill") {
+    playSkillAudio();
+    return;
+  }
   playShieldAudio();
 }
 

@@ -10,12 +10,13 @@ const jumpPower = -18;
 const doubleJumpPower = -16.4;
 const maxJumps = 2;
 const shieldDurationMs = 5000;
+const activeShieldPickupBonusMs = 500;
 const coinBonus = 10;
 const highScoreKey = "stickman_runner_highscore_v1";
 const powerupWarningMs = 2000;
-const secretChargeMax = 400;       //金币技能数量
-const shieldSkillChargeMax = 200;    //pdh技能
-const doubleScoreSkillChargeMax = 200;
+const secretChargeMax = 400;       //lsj技能金币数量
+const shieldSkillChargeMax = 10;    //pdh技能金币数量
+const doubleScoreSkillChargeMax = 200;  //js技能金币数量
 const doubleScoreDurationMs = 10000;
 const secretChargePerCoin = 1;
 const secretRealmDistance = 100;
@@ -104,8 +105,9 @@ const characterConfigs = {
   lsj: {
     id: "lsj",
     name: "LSJ",
-    headSrc: "character_move/lsj.png",
-    fallbackHeadSrc: "character_move/lsj.jpg",
+    assetBase: "character/lsj",
+    headSrc: "character/lsj/lsj.png",
+    fallbackHeadSrc: "character_move/lsj.png",
     headCrop: { x: 0, y: 0, w: 1, h: 1, scale: 1 },
     skillType: "dream",
     skillName: "秘境能量",
@@ -117,8 +119,11 @@ const characterConfigs = {
   pdh: {
     id: "pdh",
     name: "PDH",
-    headSrc: "character_move/pdh.png",
+    assetBase: "character/pdh",
+    headSrc: "character/pdh/pdh.png",
     fallbackHeadSrc: "character_move/pdh.png",
+    shieldSkillImageSrc: "character/pdh/pdh_skill.png",
+    fallbackShieldSkillImageSrc: "character_move/pdh_skill.png",
     headCrop: { x: 0, y: 0, w: 1, h: 1, scale: 1 },
     skillType: "shield",
     skillName: "护盾能量",
@@ -130,7 +135,8 @@ const characterConfigs = {
   js: {
     id: "js",
     name: "JS",
-    headSrc: "character_move/js.png",
+    assetBase: "character/js",
+    headSrc: "character/js/js.png",
     fallbackHeadSrc: "character_move/js.png",
     headCrop: { x: 0.08, y: 0, w: 0.84, h: 0.74, scale: 1.08 },
     skillType: "doubleScore",
@@ -161,7 +167,7 @@ cactusImage.src = "character_move/cactus.png";
 const roadblocksImage = new Image();
 roadblocksImage.src = "character_move/roadblocks.png";
 const pdhSkillImage = new Image();
-pdhSkillImage.src = "character_move/pdh_skill.png";
+pdhSkillImage.src = characterConfigs.pdh.shieldSkillImageSrc;
 
 const pets = [];
 const petFollowDurationMs = 10000;

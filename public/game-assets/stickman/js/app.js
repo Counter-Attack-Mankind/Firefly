@@ -85,6 +85,9 @@ function setCharacter(characterId) {
   state.secretReady = false;
   headMaskCanvas = null;
   headImage.src = character.headSrc;
+  if (character.shieldSkillImageSrc) {
+    pdhSkillImage.src = character.shieldSkillImageSrc;
+  }
 
   document.querySelectorAll(".character-card").forEach((card) => {
     card.classList.toggle("is-active", card.getAttribute("data-character-id") === character.id);
@@ -404,6 +407,14 @@ headImage.addEventListener("error", () => {
     return;
   }
   headImage.src = character.fallbackHeadSrc;
+});
+
+pdhSkillImage.addEventListener("error", () => {
+  const character = getCurrentCharacterConfig();
+  if (!character.fallbackShieldSkillImageSrc || pdhSkillImage.src.endsWith(character.fallbackShieldSkillImageSrc)) {
+    return;
+  }
+  pdhSkillImage.src = character.fallbackShieldSkillImageSrc;
 });
 
 setCharacter(state.characterId);

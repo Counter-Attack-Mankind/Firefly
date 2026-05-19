@@ -1,30 +1,53 @@
 ﻿let losePlayed = false; // 防止一帧内多次触发
+function getCharacterAudioSrc(fileName) {
+  const character = getCurrentCharacterConfig();
+  return character.assetBase ? `${character.assetBase}/${fileName}` : "";
+}
+
+function getCharacterAudioSources(baseName, fallbackSrc) {
+  return [
+    getCharacterAudioSrc(`${baseName}.m4a`),
+    getCharacterAudioSrc(`${baseName}.mp3`),
+    fallbackSrc
+  ];
+}
+
+function playAudioWithFallback(sources, volume, label) {
+  const queue = sources.filter(Boolean);
+
+  function tryPlay(index) {
+    if (index >= queue.length) {
+      return;
+    }
+    const audio = new Audio(queue[index]);
+    audio.preload = "auto";
+    audio.volume = volume;
+    audio.addEventListener("error", () => tryPlay(index + 1), { once: true });
+    audio.currentTime = 0;
+    audio.play().catch(() => tryPlay(index + 1));
+  }
+
+  try {
+    tryPlay(0);
+  } catch (e) {
+    console.warn(`${label}播放失败:`, e);
+  }
+}
+
 function playLoseAudio() {
   if (losePlayed) return;
   losePlayed = true;
 
-  try {
-    loseAudio.currentTime = 0;
-    loseAudio.play().catch(() => {});
-  } catch (e) {
-    console.warn("失败音效播放失败:", e);
-  }
+  playAudioWithFallback(getCharacterAudioSources("die", "audio/lose.mp3"), 0.7, "失败音效");
 }
 function playStartSound() {
-  try {
-    startAudio.currentTime = 0; // 每次从头播放
-    startAudio.play();
-  } catch (e) {
-    console.warn("启动音效播放失败:", e);
-  }
+  playAudioWithFallback(getCharacterAudioSources("begin", "audio/begin.m4a"), 0.6, "启动音效");
 }
 function playShieldAudio() {
-  try {
-    shieldAudio.currentTime = 0; // 防止重复播放卡住
-    shieldAudio.play().catch(() => {});
-  } catch (e) {
-    console.warn("护盾音效播放失败:", e);
-  }
+  playAudioWithFallback(getCharacterAudioSources("protect", "audio/protect.m4a"), 0.7, "护盾音效");
+}
+function playSkillAudio() {
+  playAudioWithFallback(getCharacterAudioSources("skill", "audio/protect.m4a"), 0.7, "技能音效");
 }
 
 function ensureAudio() {
