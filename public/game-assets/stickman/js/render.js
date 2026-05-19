@@ -520,8 +520,13 @@ if (leftLegFront) {
 
   // 护盾逻辑
   if (hasShield()) {
-    const pulse = 0.8 + Math.sin(performance.now() * 0.015) * 0.18;
-    ctx.strokeStyle = "rgba(0, 180, 255, 0.9)";
+    const now = performance.now();
+    const remaining = state.shieldUntil - now;
+    const warningAlpha = remaining <= powerupWarningMs
+      ? (Math.sin(now * 0.022) > 0 ? 0.95 : 0.2)
+      : 0.9;
+    const pulse = 0.8 + Math.sin(now * 0.015) * 0.18;
+    ctx.strokeStyle = `rgba(0, 180, 255, ${warningAlpha})`;
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(0, 0, headSize * (0.62 + pulse * 0.09), 0, Math.PI * 2);
@@ -732,9 +737,13 @@ function drawPets() {
   pets.forEach((p) => {
     ctx.save();
     ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+    const now = performance.now();
+    if (p.type === "companion" && p.followUntil - now <= powerupWarningMs) {
+      ctx.globalAlpha = Math.sin(now * 0.022) > 0 ? 1 : 0.25;
+    }
 
     if (p.type === "pickup") {
-      const pulse = 1 + Math.sin(performance.now() * 0.008 + p.x * 0.02) * 0.08;
+      const pulse = 1 + Math.sin(now * 0.008 + p.x * 0.02) * 0.08;
       ctx.scale(pulse, pulse);
 
       ctx.fillStyle = "rgba(255, 230, 120, 0.18)";
@@ -774,7 +783,7 @@ function drawPets() {
 
     // companion 微光
     if (p.type === "companion") {
-      const alpha = 0.18 + 0.14 * Math.sin(performance.now() * 0.01);
+      const alpha = 0.18 + 0.14 * Math.sin(now * 0.01);
       ctx.strokeStyle = `rgba(120, 220, 255, ${alpha})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -984,6 +993,79 @@ function drawSceneTransition() {
   }
 }
 
+function drawDebugDistances() {
+  if (!state.debugDistances) {
+    return;
+  }
+
+  const hazards = [
+    ...obstacles.map((o) => ({
+      type: o.type,
+      x: o.x,
+      y: o.y,
+      w: o.w,
+      h: o.h
+    })),
+    ...cliffs.map((c) => ({
+      type: "cliff",
+      x: c.x,
+      y: groundY + 1,
+      w: c.w,
+      h: canvas.height - groundY - 1
+    }))
+  ]
+    .filter((item) => item.x + item.w > -80 && item.x < canvas.width + 320)
+    .sort((a, b) => a.x - b.x);
+
+  if (hazards.length === 0) {
+    return;
+  }
+
+  ctx.save();
+  ctx.font = "bold 13px Microsoft YaHei, Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineWidth = 2;
+
+  for (const item of hazards) {
+    ctx.strokeStyle = item.type === "cliff" ? "rgba(249, 115, 22, 0.92)" : "rgba(239, 68, 68, 0.92)";
+    ctx.setLineDash(item.type === "cliff" ? [6, 5] : []);
+    ctx.strokeRect(item.x, item.y, item.w, item.h);
+  }
+
+  ctx.setLineDash([]);
+  for (let i = 0; i < hazards.length - 1; i += 1) {
+    const current = hazards[i];
+    const next = hazards[i + 1];
+    const fromX = current.x + current.w;
+    const toX = next.x;
+    const distance = Math.round(toX - fromX);
+    const midX = (fromX + toX) * 0.5;
+    const label = `${distance}px`;
+    const y = Math.max(42, Math.min(groundY - 24, Math.min(current.y, next.y) - 18));
+
+    ctx.strokeStyle = distance < 0 ? "rgba(220, 38, 38, 0.95)" : "rgba(245, 158, 11, 0.95)";
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.beginPath();
+    ctx.moveTo(fromX, y);
+    ctx.lineTo(toX, y);
+    ctx.moveTo(fromX, y - 6);
+    ctx.lineTo(fromX, y + 6);
+    ctx.moveTo(toX, y - 6);
+    ctx.lineTo(toX, y + 6);
+    ctx.stroke();
+
+    const textWidth = ctx.measureText(label).width;
+    ctx.fillStyle = "rgba(15, 23, 42, 0.82)";
+    roundRect(midX - textWidth / 2 - 6, y - 11, textWidth + 12, 22, 5);
+    ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.fillText(label, midX, y);
+  }
+
+  ctx.restore();
+}
+
 function draw() {
   drawSky();
   drawClouds();
@@ -1025,6 +1107,7 @@ state.sparks.forEach(s => {
   drawPlayer();
   drawPets();
   drawSceneTransition();
+  drawDebugDistances();
   drawPauseScreen();
   drawStartScreen();
   drawGameOver();

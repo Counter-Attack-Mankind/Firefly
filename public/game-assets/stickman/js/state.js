@@ -5,7 +5,9 @@
   speed: 6.6,
   prevSpeed: 6.6,
   score: 0,
+  distance: 0,
   highScore: loadHighScore(),
+  leaderboardTopScore: 0,
   obstacleTimer: 0,
   obstacleInterval: 1060,
   powerupTimer: 0,
@@ -18,9 +20,9 @@
   dayDirection: 1,
   lastTime: 0,
   downPressed: false,
-  sceneIndex: 0,
+  sceneIndex: sceneOrder[0],
   nextSceneScore: sceneSwitchEveryScore,
-  nextSceneIndex: 1,
+  nextSceneIndex: sceneOrder[1],
   lastSceneSwitchScore: -sceneTunnelFadeScore,
   sceneTransitionPhase: "none",
   sceneTransitionTimer: 0,
@@ -40,7 +42,8 @@
   nextCannonHigh: false,
   nextPetScore: petSpawnEveryScore,
   scoreSubmitted: false,
-  lockReleasedForRun: false
+  lockReleasedForRun: false,
+  debugDistances: false
 
 };
 

@@ -12,6 +12,7 @@ const maxJumps = 2;
 const shieldDurationMs = 5000;
 const coinBonus = 10;
 const highScoreKey = "stickman_runner_highscore_v1";
+const powerupWarningMs = 2000;
 const lowbarCliffMinDistance = 820;
 const lowbarJumpMinDistance = 520;
 const collectibleCliffPadding = 42;
@@ -36,6 +37,7 @@ const sceneApproachSpeed = 5.2;
 const sceneDarkenMs = 520;
 const sceneBrightenMs = 700;
 const playerRunX = canvas.width * 0.25;
+const sceneOrder = [1, 0, 2]; // 城市 -> 沙漠 -> 故宫
 const sceneThemes = [
   {
     id: "desert",

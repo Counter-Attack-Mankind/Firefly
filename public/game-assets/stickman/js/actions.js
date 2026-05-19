@@ -6,6 +6,7 @@
   state.speed = 6.6;
   state.prevSpeed = 6.6;
   state.score = 0;
+  state.distance = 0;
   state.scoreSubmitted = false;
   state.lockReleasedForRun = false;
   if (typeof leaderboardResetRun === "function") {
@@ -17,7 +18,7 @@
   state.powerupInterval = 15000;
   state.coinTimer = 0;
   state.coinInterval = 900;
-  state.sceneIndex = 0;
+  state.sceneIndex = sceneOrder[0];
   state.nextSceneScore = sceneSwitchEveryScore;
   state.nextSceneIndex = pickNextSceneIndex(state.sceneIndex);
   state.lastSceneSwitchScore = -sceneTunnelFadeScore;

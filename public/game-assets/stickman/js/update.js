@@ -325,7 +325,9 @@ if (c.warning) {
     }
   }
 }
-  state.score += (0.05 + state.speed * 0.015) * dt;
+  const runDistance = (0.05 + state.speed * 0.015) * dt;
+  state.distance += runDistance;
+  state.score += runDistance;
 
 }
 
@@ -363,7 +365,7 @@ function isObstacleColliding(obstacle) {
 function updateSceneTransition(deltaMs, dt) {
   if (
     state.sceneTransitionPhase === "none" &&
-    state.score >= state.nextSceneScore - sceneTunnelLeadScore
+    state.distance >= state.nextSceneScore
   ) {
     beginSceneGate();
   }
@@ -475,9 +477,9 @@ function beginSceneApproach() {
 }
 
 function completeSceneSwitch() {
-  state.score = Math.max(state.score, state.nextSceneScore);
+  state.distance = Math.max(state.distance, state.nextSceneScore);
   state.sceneIndex = state.nextSceneIndex;
-  state.lastSceneSwitchScore = state.score;
+  state.lastSceneSwitchScore = state.distance;
   state.nextSceneScore += sceneSwitchEveryScore;
   state.nextSceneIndex = pickNextSceneIndex(state.sceneIndex);
   state.sceneTransitionPhase = "exit";
@@ -486,7 +488,7 @@ function completeSceneSwitch() {
   state.sceneTunnelX = sceneTunnelExitX;
   player.x = state.sceneTunnelX + sceneTunnelWidth * 0.5;
   player.y = playerGroundY;
-  state.sceneExitSafeUntil = state.score + sceneExitSafeScore;
+  state.sceneExitSafeUntil = state.distance + sceneExitSafeScore;
   removeEntitiesNearTunnel();
 }
 
@@ -551,14 +553,11 @@ function removeCirclesInRange(items, left, right) {
 }
 
 function pickNextSceneIndex(currentIndex) {
-  if (sceneThemes.length <= 1) {
-    return 0;
+  const currentOrderIndex = sceneOrder.indexOf(currentIndex);
+  if (currentOrderIndex === -1) {
+    return sceneOrder[0];
   }
-  let next = currentIndex;
-  while (next === currentIndex) {
-    next = Math.floor(Math.random() * sceneThemes.length);
-  }
-  return next;
+  return sceneOrder[(currentOrderIndex + 1) % sceneOrder.length];
 }
 
 function applyCoinMagnet(coin, dt) {

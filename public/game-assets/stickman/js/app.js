@@ -1,13 +1,11 @@
 ﻿function updateScore() {
   const score = Math.floor(state.score);
-  if (score > state.highScore) {
-    state.highScore = score;
-    saveHighScore(score);
-  }
+  const distance = Math.floor(state.distance);
+  const leaderboardTopScore = Math.max(0, Math.floor(Number(state.leaderboardTopScore || 0)));
   const shieldText = hasShield() ? " | 护盾: 1" : "";
   const petText = hasPetCompanion() ? " | 磁铁: 1" : "";
   const sceneText = ` | 场景: ${getCurrentSceneTheme().name}`;
-  scoreEl.textContent = `分数: ${score} | 最高分: ${state.highScore}${sceneText}${shieldText}${petText}`;
+  scoreEl.textContent = `分数: ${score} | 距离: ${distance}m | 第一名: ${leaderboardTopScore}${sceneText}${shieldText}${petText}`;
 }
 
 function updatePauseButton() {
@@ -22,6 +20,15 @@ function updatePauseButton() {
   pauseButton.innerHTML = state.paused
     ? '<span class="pause-icon pause-icon-play" aria-hidden="true"></span>'
     : '<span class="pause-icon pause-icon-pause" aria-hidden="true"></span>';
+}
+
+function updateDebugDistanceButton() {
+  const debugButton = document.getElementById("debugDistanceButton");
+  if (!debugButton) {
+    return;
+  }
+  debugButton.classList.toggle("is-active", state.debugDistances);
+  debugButton.setAttribute("aria-pressed", state.debugDistances ? "true" : "false");
 }
 
 function togglePause() {
@@ -258,6 +265,13 @@ document.getElementById("pauseButton")?.addEventListener("pointerdown", (event) 
   togglePause();
 });
 
+document.getElementById("debugDistanceButton")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  state.debugDistances = !state.debugDistances;
+  updateDebugDistanceButton();
+});
+
 headImage.addEventListener("load", () => {
   buildHeadMaskFromBackground();
 });
@@ -269,4 +283,5 @@ headImage.addEventListener("error", () => {
 state.nextSceneIndex = pickNextSceneIndex(state.sceneIndex);
 updateScore();
 updatePauseButton();
+updateDebugDistanceButton();
 requestAnimationFrame(loop);

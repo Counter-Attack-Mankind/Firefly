@@ -32,14 +32,18 @@ function setLeaderboardStatus(text) {
 }
 
 function renderLeaderboard(entries) {
+  const topEntries = (entries || []).slice(0, 10);
+  state.leaderboardTopScore = Math.max(0, Math.floor(Number(topEntries[0]?.score || 0)));
+  if (typeof updateScore === "function") {
+    updateScore();
+  }
   window.parent?.postMessage(
-    { type: "stickman:leaderboard", entries: (entries || []).slice(0, 10) },
+    { type: "stickman:leaderboard", entries: topEntries },
     window.location.origin
   );
   if (!leaderboardListEl) {
     return;
   }
-  const topEntries = (entries || []).slice(0, 10);
   if (topEntries.length === 0) {
     leaderboardListEl.innerHTML = '<li class="leaderboard-empty">还没有分数，来拿第一个第一名。</li>';
     return;
