@@ -40,8 +40,30 @@ function updateMobileControlsButton() {
   }
   mobileButton.classList.toggle("is-active", state.mobileControls);
   mobileButton.setAttribute("aria-pressed", state.mobileControls ? "true" : "false");
+  mobileButton.textContent = state.mobileControls ? "退出手机端" : "手机端";
   mobileControls.classList.toggle("is-active", state.mobileControls);
   mobileControls.setAttribute("aria-hidden", state.mobileControls ? "false" : "true");
+  document.body.classList.toggle("mobile-play-mode", state.mobileControls);
+}
+
+async function setMobilePlayMode(enabled) {
+  state.mobileControls = enabled;
+  state.downPressed = false;
+  updateMobileControlsButton();
+
+  try {
+    if (enabled) {
+      await document.documentElement.requestFullscreen?.();
+      await screen.orientation?.lock?.("landscape");
+    } else {
+      screen.orientation?.unlock?.();
+      if (document.fullscreenElement) {
+        await document.exitFullscreen?.();
+      }
+    }
+  } catch (_error) {
+    // Some mobile browsers only allow CSS rotation instead of orientation lock.
+  }
 }
 
 function updateSecretProgressBar() {
@@ -271,9 +293,7 @@ document.getElementById("debugDistanceButton")?.addEventListener("pointerdown", 
 document.getElementById("mobileControlsButton")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   event.stopPropagation();
-  state.mobileControls = !state.mobileControls;
-  state.downPressed = false;
-  updateMobileControlsButton();
+  setMobilePlayMode(!state.mobileControls);
 });
 
 function bindMobileActionButton(buttonId, handlers) {
