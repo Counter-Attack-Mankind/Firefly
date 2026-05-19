@@ -51,23 +51,28 @@ async function setMobilePlayMode(enabled) {
   state.downPressed = false;
   updateMobileControlsButton();
 
-  try {
-    if (enabled) {
-      const fullscreenTarget = document.querySelector(".play-area") || document.documentElement;
+  if (enabled) {
+    const fullscreenTarget = document.querySelector(".game-stage") || document.documentElement;
+    try {
       await fullscreenTarget.requestFullscreen?.();
-      try {
-        await screen.orientation?.lock?.("landscape");
-      } catch (_orientationError) {
-        // CSS rotation keeps the game playable when orientation lock is unavailable.
-      }
-    } else {
+    } catch (_fullscreenError) {
+      // CSS full-screen mode remains active when native fullscreen is unavailable.
+    }
+    try {
+      await screen.orientation?.lock?.("landscape");
+    } catch (_orientationError) {
+      // CSS rotation keeps the game playable when orientation lock is unavailable.
+    }
+    return;
+  }
+
+  try {
       screen.orientation?.unlock?.();
       if (document.fullscreenElement) {
         await document.exitFullscreen?.();
       }
-    }
   } catch (_error) {
-    // Some mobile browsers only allow CSS rotation instead of orientation lock.
+    // Exiting native fullscreen can be unavailable on some browsers.
   }
 }
 
