@@ -1,13 +1,12 @@
 ﻿function updateScore() {
   const score = Math.floor(state.score);
   const distance = Math.floor(state.distance);
-  const leaderboardTopScore = Math.max(0, Math.floor(Number(state.leaderboardTopScore || 0)));
-  const shieldText = hasShield() ? " | 护盾: 1" : "";
-  const doubleText = hasDoubleScore() ? " | 双倍: 1" : "";
-  const petText = hasPetCompanion() ? " | 磁铁: 1" : "";
-  const fanText = state.wdFanActive ? " | 复活扇: 1" : "";
-  const sceneText = ` | 场景: ${getCurrentSceneTheme().name}`;
-  scoreEl.textContent = `分数: ${score} | 距离: ${distance}m | 第一名: ${leaderboardTopScore}${sceneText}${shieldText}${doubleText}${petText}${fanText}`;
+  const now = performance.now();
+  const shieldText = hasShield() ? ` | 护盾: ${Math.ceil((state.shieldUntil - now) / 1000)}s` : "";
+  const magnetMs = typeof getPetCompanionRemainingMs === "function" ? getPetCompanionRemainingMs() : 0;
+  const magnetText = magnetMs > 0 ? ` | 磁铁: ${Math.ceil(magnetMs / 1000)}s` : "";
+  scoreEl.textContent = `分数: ${score} | 距离: ${distance}m${shieldText}${magnetText}`;
+  scoreEl.classList.toggle("is-double-score", hasDoubleScore() && state.characterId === "js");
 }
 
 function updatePauseButton() {
@@ -50,6 +49,11 @@ function setMobileControlsEnabled(enabled) {
   state.mobileControls = enabled;
   state.downPressed = false;
   updateMobileControlsButton();
+}
+
+function enterCharacterSelectPage() {
+  document.getElementById("entryPrompt")?.classList.add("is-hidden");
+  updateCharacterSelectState();
 }
 
 function restartRun() {
@@ -107,6 +111,96 @@ function getCurrentCharacterConfig() {
   return characterConfigs[state.characterId] || characterConfigs.lsj;
 }
 
+const characterPageSize = 4;
+let characterPageIndex = 0;
+
+function getCharacterList() {
+  return Object.values(characterConfigs);
+}
+
+function getCharacterPageCount() {
+  return Math.max(1, Math.ceil(getCharacterList().length / characterPageSize));
+}
+
+function getCharacterPageItems() {
+  const start = characterPageIndex * characterPageSize;
+  return getCharacterList().slice(start, start + characterPageSize);
+}
+
+function updateCharacterCardsActive() {
+  const locked = state.started && state.running;
+  document.querySelectorAll(".character-card").forEach((card) => {
+    const active = card.getAttribute("data-character-id") === state.characterId;
+    card.classList.toggle("is-active", active);
+    card.disabled = locked;
+  });
+}
+
+function updateCharacterPreview() {
+  const character = getCurrentCharacterConfig();
+  const previewImage = document.getElementById("characterPreviewImage");
+  const previewName = document.getElementById("characterPreviewName");
+  const previewIntro = document.getElementById("characterPreviewIntro");
+  const skillTitle = document.getElementById("characterSkillTitle");
+  const skillDescription = document.getElementById("characterSkillDescription");
+  if (previewImage) {
+    previewImage.src = character.headSrc;
+  }
+  if (previewName) {
+    previewName.textContent = character.name;
+  }
+  if (previewIntro) {
+    previewIntro.textContent = character.intro || "";
+  }
+  if (skillTitle) {
+    skillTitle.textContent = character.skillName;
+  }
+  if (skillDescription) {
+    skillDescription.textContent = character.skillDescription || character.readyText;
+  }
+}
+
+function renderCharacterCards() {
+  const options = document.getElementById("characterOptions");
+  if (!options) {
+    return;
+  }
+  const pageItems = getCharacterPageItems();
+  options.innerHTML = pageItems
+    .map((character) => {
+      const activeClass = character.id === state.characterId ? " is-active" : "";
+      return `
+        <button class="character-card${activeClass}" type="button" data-character-id="${character.id}">
+          <img src="${character.headSrc}" alt="" />
+          <span>${character.name}</span>
+          <small>${character.readyText}</small>
+          <em>${character.chargeMax} 金币充能</em>
+        </button>
+      `;
+    })
+    .join("");
+  updateCharacterCardsActive();
+  const pageCount = getCharacterPageCount();
+  const prevButton = document.getElementById("characterPrevPageButton");
+  const nextButton = document.getElementById("characterNextPageButton");
+  const pageText = document.getElementById("characterPageText");
+  if (prevButton) {
+    prevButton.disabled = characterPageIndex <= 0;
+  }
+  if (nextButton) {
+    nextButton.disabled = characterPageIndex >= pageCount - 1;
+  }
+  if (pageText) {
+    pageText.textContent = `${characterPageIndex + 1} / ${pageCount}`;
+  }
+}
+
+function setCharacterPage(nextPageIndex) {
+  const pageCount = getCharacterPageCount();
+  characterPageIndex = Math.min(pageCount - 1, Math.max(0, nextPageIndex));
+  renderCharacterCards();
+}
+
 function setCharacter(characterId) {
   if (state.started && state.running) {
     return;
@@ -123,25 +217,42 @@ function setCharacter(characterId) {
     wdSkillImage.src = character.fanSkillImageSrc;
   }
 
-  document.querySelectorAll(".character-card").forEach((card) => {
-    card.classList.toggle("is-active", card.getAttribute("data-character-id") === character.id);
-  });
+  const characterIndex = getCharacterList().findIndex((item) => item.id === character.id);
+  if (characterIndex >= 0) {
+    const nextPageIndex = Math.floor(characterIndex / characterPageSize);
+    if (nextPageIndex !== characterPageIndex) {
+      characterPageIndex = nextPageIndex;
+      renderCharacterCards();
+    }
+  }
+  updateCharacterCardsActive();
+  updateCharacterPreview();
   updateSecretProgressBar();
 }
 
 function updateCharacterSelectState() {
   const locked = state.started && state.running;
   const characterSelect = document.getElementById("characterSelect");
-  characterSelect?.classList.toggle("is-active", !locked);
-  characterSelect?.setAttribute("aria-hidden", locked ? "true" : "false");
+  const entryActive = !document.getElementById("entryPrompt")?.classList.contains("is-hidden");
+  const visible = !locked && !entryActive;
+  characterSelect?.classList.toggle("is-active", visible);
+  characterSelect?.setAttribute("aria-hidden", visible ? "false" : "true");
   document.querySelectorAll(".character-card").forEach((card) => {
     card.disabled = locked;
   });
   const startButton = document.getElementById("characterStartButton");
   if (startButton) {
     startButton.disabled = locked;
-    startButton.textContent = state.started && !state.running ? "再来一局" : "开始游戏";
+    startButton.textContent = "进入游戏";
   }
+}
+
+function returnToEntryPrompt() {
+  if (state.started && state.running) {
+    return;
+  }
+  document.getElementById("entryPrompt")?.classList.remove("is-hidden");
+  updateCharacterSelectState();
 }
 
 function togglePause() {
@@ -269,7 +380,11 @@ window.addEventListener("message", (event) => {
   if (event.data?.type !== "stickman:parent-fullscreen") {
     return;
   }
-  document.body.classList.toggle("parent-fullscreen-mode", Boolean(event.data.active));
+  const active = Boolean(event.data.active);
+  document.body.classList.toggle("parent-fullscreen-mode", active);
+  if (active) {
+    setMobileControlsEnabled(true);
+  }
 });
 
 canvas.addEventListener("pointerdown", () => {
@@ -299,6 +414,17 @@ document.getElementById("mobileControlsButton")?.addEventListener("pointerdown",
   event.preventDefault();
   event.stopPropagation();
   setMobileControlsEnabled(!state.mobileControls);
+});
+
+document.getElementById("entryFullscreenButton")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  window.parent?.postMessage({ type: "stickman:request-fullscreen" }, window.location.origin);
+  enterCharacterSelectPage();
+});
+
+document.getElementById("entryIgnoreButton")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  enterCharacterSelectPage();
 });
 
 document.getElementById("exitMobileButton")?.addEventListener("pointerdown", (event) => {
@@ -367,10 +493,33 @@ document.getElementById("characterSelect")?.addEventListener("pointerdown", (eve
   event.stopPropagation();
 });
 
-document.querySelectorAll(".character-card").forEach((card) => {
-  card.addEventListener("click", () => {
-    setCharacter(card.getAttribute("data-character-id") || "lsj");
-  });
+document.getElementById("characterOptions")?.addEventListener("click", (event) => {
+  const target = event.target;
+  const card = target instanceof Element ? target.closest(".character-card") : null;
+  if (!card) {
+    return;
+  }
+  event.preventDefault();
+  event.stopPropagation();
+  setCharacter(card.getAttribute("data-character-id") || "lsj");
+});
+
+document.getElementById("characterPrevPageButton")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  setCharacterPage(characterPageIndex - 1);
+});
+
+document.getElementById("characterNextPageButton")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  setCharacterPage(characterPageIndex + 1);
+});
+
+document.getElementById("characterBackButton")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  returnToEntryPrompt();
 });
 
 document.getElementById("characterStartButton")?.addEventListener("click", (event) => {
@@ -404,6 +553,7 @@ wdSkillImage.addEventListener("error", () => {
   wdSkillImage.src = "";
 });
 
+renderCharacterCards();
 setCharacter(state.characterId);
 state.nextSceneIndex = pickNextSceneIndex(state.sceneIndex);
 updateScore();

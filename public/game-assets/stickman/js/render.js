@@ -766,12 +766,13 @@ function drawPowerups() {
 }
 
 function drawCoins() {
+  const activeCoinImage = hasDoubleScore() && state.characterId === "js" ? plusCoinImage : coinImage;
   coins.forEach((c) => {
     ctx.save();
     ctx.translate(c.x, c.y);
     const size = c.r * 2.35;
-    if (coinImage.complete && coinImage.naturalWidth > 0) {
-      ctx.drawImage(coinImage, -size / 2, -size / 2, size, size);
+    if (activeCoinImage.complete && activeCoinImage.naturalWidth > 0) {
+      ctx.drawImage(activeCoinImage, -size / 2, -size / 2, size, size);
     } else {
       ctx.fillStyle = "#f6c632";
       ctx.beginPath();

@@ -494,6 +494,13 @@ function hasPetCompanion() {
   return pets.some(p => p.type === "companion" && p.alive);
 }
 
+function getPetCompanionRemainingMs() {
+  const now = performance.now();
+  return pets
+    .filter((p) => p.type === "companion" && p.alive)
+    .reduce((max, p) => Math.max(max, p.followUntil - now), 0);
+}
+
 function updatePets(deltaMs, dt) {
   const now = performance.now();
 

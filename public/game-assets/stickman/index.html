@@ -32,32 +32,53 @@
       <section class="play-area">
         <div class="game-stage">
           <canvas id="gameCanvas" width="960" height="420"></canvas>
+          <div id="entryPrompt" class="entry-prompt">
+            <div class="entry-prompt-panel">
+              <div class="entry-prompt-title">如您是手机，请切换全屏模式游玩更佳（PC端请忽略）！</div>
+              <div class="entry-prompt-actions">
+                <button id="entryFullscreenButton" type="button">全屏</button>
+                <button id="entryIgnoreButton" type="button">忽略</button>
+              </div>
+            </div>
+          </div>
           <div id="characterSelect" class="character-select">
             <div class="character-select-panel">
-              <div class="character-select-title">选择角色</div>
-              <div class="character-options">
-                <button class="character-card is-active" type="button" data-character-id="lsj">
-                  <img src="character/lsj/lsj.png" alt="" />
-                  <span>LSJ</span>
-                  <small>300 金币进入秘境</small>
-                </button>
-              <button class="character-card" type="button" data-character-id="pdh">
-                <img src="character/pdh/pdh.png" alt="" />
-                <span>PDH</span>
-                <small>200 金币召唤护盾</small>
-              </button>
-              <button class="character-card" type="button" data-character-id="js">
-                <img src="character/js/js.png" alt="" />
-                <span>JS</span>
-                <small>200 金币双倍得分 10s</small>
-              </button>
-              <button class="character-card" type="button" data-character-id="wd">
-                <img src="character/wd/wd.png" alt="" />
-                <span>WD</span>
-                <small>500 金币召唤复活扇</small>
-              </button>
-            </div>
-              <button id="characterStartButton" class="character-start-button" type="button">开始游戏</button>
+              <div class="character-select-header">
+                <button id="characterBackButton" class="character-back-button" type="button">返回页面设置</button>
+                <div class="character-select-title">选择角色</div>
+                <div id="characterPageText" class="character-page-text">1 / 1</div>
+              </div>
+              <div class="character-select-main">
+                <section class="character-preview-card" aria-label="角色预览">
+                  <div class="character-runner-preview" aria-hidden="true">
+                    <span class="preview-shadow"></span>
+                    <span class="preview-head-wrap">
+                      <img id="characterPreviewImage" src="character/lsj/lsj.png" alt="" />
+                    </span>
+                    <span class="preview-body"></span>
+                    <span class="preview-arm preview-arm-front"></span>
+                    <span class="preview-arm preview-arm-back"></span>
+                    <span class="preview-leg preview-leg-front"></span>
+                    <span class="preview-leg preview-leg-back"></span>
+                  </div>
+                  <div class="character-preview-copy">
+                    <div id="characterPreviewName" class="character-preview-name">LSJ</div>
+                    <p id="characterPreviewIntro" class="character-preview-intro"></p>
+                  </div>
+                </section>
+                <section class="character-picker-card" aria-label="角色列表">
+                  <button id="characterPrevPageButton" class="character-page-button character-page-button-prev" type="button" aria-label="上一页">‹</button>
+                  <div id="characterOptions" class="character-options"></div>
+                  <button id="characterNextPageButton" class="character-page-button character-page-button-next" type="button" aria-label="下一页">›</button>
+                </section>
+              </div>
+              <div class="character-select-footer">
+                <div class="character-skill-panel">
+                  <div id="characterSkillTitle" class="character-skill-title">秘境能量</div>
+                  <p id="characterSkillDescription" class="character-skill-description"></p>
+                </div>
+                <button id="characterStartButton" class="character-start-button" type="button">进入游戏</button>
+              </div>
             </div>
           </div>
           <div class="hud">

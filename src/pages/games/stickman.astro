@@ -238,6 +238,10 @@ import { url } from "@/utils/url-utils";
       frame?.contentWindow?.focus();
       return;
     }
+    if (event.data?.type === "stickman:request-fullscreen") {
+      void enterGameFullscreen();
+      return;
+    }
     if (event.data?.type === "stickman:game-over") {
       setGamePageScrollLock(false);
       window.setTimeout(loadLeaderboard, 600);

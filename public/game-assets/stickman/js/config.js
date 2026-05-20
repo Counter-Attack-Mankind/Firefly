@@ -17,8 +17,8 @@ const powerupWarningMs = 2000;
 const secretChargeMax = 300;       //lsj技能金币数量
 const shieldSkillChargeMax = 200;    //pdh技能金币数量
 const doubleScoreSkillChargeMax = 200;  //js技能金币数量
-const reviveSkillChargeMax = 10;  //wd技能金币数量
-const doubleScoreDurationMs = 10000;
+const reviveSkillChargeMax = 400;  //wd技能金币数量
+const doubleScoreDurationMs = 20000;
 const wdReviveInvincibleMs = 2000;
 const secretChargePerCoin = 1;
 const secretRealmDistance = 100;
@@ -119,7 +119,9 @@ const characterConfigs = {
     skillOrb: "秘",
     chargeMax: secretChargeMax,
     readyText: "按 E 释放秘境",
-    chargingText: "收集金币充能"
+    chargingText: "收集金币充能",
+    skillDescription: "收集金币充满能量后，按 E 进入无障碍秘境冲刺。",
+    intro: "节奏稳定的冒险者，适合熟悉路线、专注收集金币。"
   },
   pdh: {
     id: "pdh",
@@ -135,7 +137,9 @@ const characterConfigs = {
     skillOrb: "盾",
     chargeMax: shieldSkillChargeMax,
     readyText: "按 E 召唤护盾",
-    chargingText: "收集金币充能"
+    chargingText: "收集金币充能",
+    skillDescription: "收集金币充满能量后，按 E 召唤强化护盾抵御危险。",
+    intro: "防守型角色，主动护盾优先级更高，容错空间更大。"
   },
   js: {
     id: "js",
@@ -149,7 +153,9 @@ const characterConfigs = {
     skillOrb: "双",
     chargeMax: doubleScoreSkillChargeMax,
     readyText: "按 E 双倍得分",
-    chargingText: "收集金币充能"
+    chargingText: "收集金币充能",
+    skillDescription: "收集金币充满能量后，按 E 开启 20 秒双倍得分。",
+    intro: "冲榜型角色，适合在高速阶段集中爆发分数。"
   },
   wd: {
     id: "wd",
@@ -164,7 +170,9 @@ const characterConfigs = {
     skillOrb: "扇",
     chargeMax: reviveSkillChargeMax,
     readyText: "按 E 召唤扇子",
-    chargingText: "收集金币充能"
+    chargingText: "收集金币充能",
+    skillDescription: "收集金币充满能量后，按 E 召唤复活扇，本局可复活一次。",
+    intro: "保命型角色，适合挑战更远距离和更高风险路线。"
   }
 };
 
@@ -182,6 +190,8 @@ petImage.src = "character_move/pet.webp";
 
 const coinImage = new Image();
 coinImage.src = "character_move/coin.png";
+const plusCoinImage = new Image();
+plusCoinImage.src = "character/js/pluscoin.png";
 const cactusImage = new Image();
 cactusImage.src = "character_move/cactus.png";
 const roadblocksImage = new Image();
