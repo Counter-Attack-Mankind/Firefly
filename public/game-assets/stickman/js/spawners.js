@@ -477,7 +477,7 @@ function activatePetCompanion() {
     w: 34,
     h: 34,
     angle: 0,
-    followUntil: now + petFollowDurationMs,
+    followUntil: now + petFollowDurationMs + (state.characterId === "csy" ? csyPowerupBonusMs : 0),
     alive: true,             // ✅ 新增标记
     wanderX: 0,
     wanderY: 0,

@@ -348,10 +348,155 @@ function drawLimb(startX, startY, angleDeg, upperLen, lowerLen, bendDeg) {
   ctx.stroke();
 }
 
+function drawLjwDashPlayer() {
+  const now = performance.now();
+  const hover = Math.sin(now * 0.01) * 4;
+  const x = player.x;
+  const y = player.y + hover;
+
+  ctx.save();
+  ctx.translate(x, y);
+
+  const trailGrad = ctx.createLinearGradient(-150, 0, 20, 0);
+  trailGrad.addColorStop(0, "rgba(56, 189, 248, 0)");
+  trailGrad.addColorStop(0.45, "rgba(56, 189, 248, 0.24)");
+  trailGrad.addColorStop(1, "rgba(250, 204, 21, 0.46)");
+  ctx.fillStyle = trailGrad;
+  ctx.beginPath();
+  ctx.moveTo(-150, 4);
+  ctx.quadraticCurveTo(-72, -34, 24, -20);
+  ctx.lineTo(18, 26);
+  ctx.quadraticCurveTo(-72, 40, -150, 4);
+  ctx.fill();
+
+  // Floating pet follows behind LJW until the dash ends.
+  ctx.save();
+  const petBob = Math.sin(now * 0.012 + 1.4) * 9;
+  const petSize = 54;
+  ctx.translate(-112, 18 + petBob);
+  ctx.rotate(Math.sin(now * 0.006) * 0.12);
+  ctx.globalAlpha = 0.92;
+  if (ljwDashPetImage.complete && ljwDashPetImage.naturalWidth > 0) {
+    ctx.drawImage(ljwDashPetImage, -petSize / 2, -petSize / 2, petSize, petSize);
+  } else {
+    ctx.fillStyle = "rgba(248, 250, 252, 0.9)";
+    ctx.beginPath();
+    ctx.arc(0, 0, petSize / 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  const flyW = 150;
+  const flyH = 112;
+  ctx.save();
+  ctx.rotate(Math.sin(now * 0.008) * 0.045);
+  if (ljwFlyImage.complete && ljwFlyImage.naturalWidth > 0) {
+    ctx.drawImage(ljwFlyImage, -flyW / 2, -flyH / 2, flyW, flyH);
+  } else {
+    ctx.strokeStyle = "#0f172a";
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(-36, 16);
+    ctx.lineTo(32, -4);
+    ctx.moveTo(-12, -28);
+    ctx.lineTo(8, 34);
+    ctx.stroke();
+    if (headImage.complete && headImage.naturalWidth > 0) {
+      ctx.drawImage(headImage, 10, -60, 52, 52);
+    }
+  }
+  ctx.restore();
+
+  ctx.strokeStyle = `rgba(250, 204, 21, ${0.42 + 0.22 * Math.sin(now * 0.02)})`;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 98, 62, -0.08, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawCsyForceField() {
+  if (state.characterId !== "csy") {
+    return;
+  }
+  const now = performance.now();
+  const hb = playerHitbox();
+  const cx = hb.x + hb.w * 0.5;
+  const baseY = hb.y + hb.h * 0.92;
+  const coreY = hb.y + hb.h * 0.48;
+  const pulse = 1 + Math.sin(now * 0.008) * 0.08;
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  const grad = ctx.createRadialGradient(cx, coreY, 8, cx, coreY, 78 * pulse);
+  grad.addColorStop(0, "rgba(255, 244, 214, 0.18)");
+  grad.addColorStop(0.32, "rgba(248, 113, 113, 0.18)");
+  grad.addColorStop(0.72, "rgba(220, 38, 38, 0.1)");
+  grad.addColorStop(1, "rgba(127, 29, 29, 0)");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.ellipse(cx, coreY, 54 * pulse, 82 * pulse, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  for (let i = 0; i < 12; i += 1) {
+    const t = i / 11;
+    const side = i % 2 === 0 ? -1 : 1;
+    const seed = i * 1.73;
+    const wave = Math.sin(now * 0.012 + seed);
+    const rootX = cx + (t - 0.5) * 46;
+    const flameH = (58 + (i % 4) * 11 + wave * 10) * pulse;
+    const flameW = 13 + (i % 3) * 4;
+    const tipX = rootX + side * (18 + Math.abs(wave) * 14);
+    const tipY = baseY - flameH;
+    const innerAlpha = 0.34 + Math.max(0, wave) * 0.18;
+    const outerAlpha = 0.2 + Math.max(0, -wave) * 0.12;
+
+    ctx.fillStyle = `rgba(220, 38, 38, ${outerAlpha})`;
+    ctx.beginPath();
+    ctx.moveTo(rootX - flameW, baseY);
+    ctx.quadraticCurveTo(rootX - flameW * 2.1, baseY - flameH * 0.42, tipX, tipY);
+    ctx.quadraticCurveTo(rootX + flameW * 2.1, baseY - flameH * 0.46, rootX + flameW, baseY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(248, 113, 113, ${innerAlpha})`;
+    ctx.beginPath();
+    ctx.moveTo(rootX - flameW * 0.42, baseY - 4);
+    ctx.quadraticCurveTo(rootX - flameW, baseY - flameH * 0.34, tipX, tipY + flameH * 0.2);
+    ctx.quadraticCurveTo(rootX + flameW, baseY - flameH * 0.36, rootX + flameW * 0.42, baseY - 4);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.strokeStyle = `rgba(255, 180, 120, ${0.18 + 0.08 * Math.sin(now * 0.015)})`;
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+  for (let i = 0; i < 5; i += 1) {
+    const offset = (i - 2) * 16;
+    ctx.beginPath();
+    ctx.moveTo(cx + offset, baseY - 6);
+    ctx.quadraticCurveTo(
+      cx + offset * 0.7 + Math.sin(now * 0.01 + i) * 16,
+      coreY + 8,
+      cx + offset * 0.35,
+      hb.y + 10 + Math.cos(now * 0.009 + i) * 8
+    );
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawPlayer() {
+  if (hasLjwDash()) {
+    drawLjwDashPlayer();
+    return;
+  }
   if (hasReviveInvincible() && Math.sin(performance.now() * 0.03) < 0) {
     return;
   }
+  drawCsyForceField();
   const footY = player.y;
   const inAir = !player.onGround;
   const rising = player.vy < -1;
@@ -788,14 +933,46 @@ function drawCoins() {
   });
 }
 
+function drawMagnetField() {
+  if (!hasPetCompanion() && !hasLjwDash()) {
+    return;
+  }
+  const hb = playerHitbox();
+  const cx = hb.x + hb.w * 0.5;
+  const cy = hb.y + hb.h * 0.45;
+  const now = performance.now();
+  const spin = now * 0.004;
+  const radius = hasLjwDash() ? 64 : 50;
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.strokeStyle = "rgba(125, 211, 252, 0.66)";
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+  ctx.shadowColor = "rgba(56, 189, 248, 0.48)";
+  ctx.shadowBlur = 10;
+  for (let i = 0; i < 3; i += 1) {
+    const angle = spin + (i * Math.PI * 2) / 3;
+    const orbX = cx + Math.cos(angle) * radius;
+    const orbY = cy + Math.sin(angle) * radius * 0.62;
+    ctx.beginPath();
+    ctx.arc(orbX, orbY, 4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(angle) * 18, cy + Math.sin(angle) * 12);
+    ctx.lineTo(orbX - Math.cos(angle) * 8, orbY - Math.sin(angle) * 5);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawPets() {
   pets.forEach((p) => {
+    if (p.type === "companion") {
+      return;
+    }
     ctx.save();
     ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
     const now = performance.now();
-    if (p.type === "companion" && p.followUntil - now <= powerupWarningMs) {
-      ctx.globalAlpha = Math.sin(now * 0.022) > 0 ? 1 : 0.25;
-    }
 
     if (p.type === "pickup") {
       const pulse = 1 + Math.sin(now * 0.008 + p.x * 0.02) * 0.08;
@@ -834,16 +1011,6 @@ function drawPets() {
       ctx.textBaseline = "middle";
       ctx.fillText("N", -size * 0.26, size * 0.42);
       ctx.fillText("S", size * 0.26, size * 0.42);
-    }
-
-    // companion 微光
-    if (p.type === "companion") {
-      const alpha = 0.18 + 0.14 * Math.sin(now * 0.01);
-      ctx.strokeStyle = `rgba(120, 220, 255, ${alpha})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(0, 0, p.w * 0.42, 0, Math.PI * 2);
-      ctx.stroke();
     }
 
     ctx.restore();
@@ -1132,6 +1299,7 @@ function draw() {
   drawCoins();
   drawCannonballs();
   drawDangerVignette();
+  drawMagnetField();
 
 // --- 地面划痕 ---
 state.skidMarks.forEach(m => {

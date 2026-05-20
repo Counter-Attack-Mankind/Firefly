@@ -10,6 +10,7 @@ const jumpPower = -18;
 const doubleJumpPower = -16.4;
 const maxJumps = 2;
 const shieldDurationMs = 5000;
+const csyPowerupBonusMs = 2000;
 const activeShieldPickupBonusMs = 500;
 const coinBonus = 10;
 const highScoreKey = "stickman_runner_highscore_v1";
@@ -18,8 +19,14 @@ const secretChargeMax = 300;       //lsj技能金币数量
 const shieldSkillChargeMax = 200;    //pdh技能金币数量
 const doubleScoreSkillChargeMax = 200;  //js技能金币数量
 const reviveSkillChargeMax = 400;  //wd技能金币数量
+const ljwDashSkillChargeMax = 300;  //ljw技能金币数量
 const doubleScoreDurationMs = 20000;
 const wdReviveInvincibleMs = 2000;
+const ljwLandingInvincibleMs = 1000;
+const ljwDashDistance = 200;
+const ljwDashSpeed = 15.8;
+const ljwDashFlyY = groundY - 178;
+const ljwDashClearRadius = 300;
 const secretChargePerCoin = 1;
 const secretRealmDistance = 100;
 const secretCoinSpacing = 62;
@@ -29,6 +36,8 @@ const jumpObstacleMinDistance = 200;
 const collectibleCliffPadding = 42;
 const petCoinMagnetRadius = 190;
 const petCoinMagnetSpeed = 0.28;
+const ljwDashMagnetRadius = 360;
+const ljwDashMagnetSpeed = 0.58;
 const obstacleSpawnLeadMin = 300;
 const obstacleSpawnLeadRange = 220;
 const coinPreloadBuffer = 24;
@@ -121,7 +130,7 @@ const characterConfigs = {
     readyText: "按 E 释放秘境",
     chargingText: "收集金币充能",
     skillDescription: "收集金币充满能量后，按 E 进入无障碍秘境冲刺。",
-    intro: "节奏稳定的冒险者，适合熟悉路线、专注收集金币。"
+    intro: "作者本人那还说啥了，选我就对了"
   },
   pdh: {
     id: "pdh",
@@ -139,7 +148,7 @@ const characterConfigs = {
     readyText: "按 E 召唤护盾",
     chargingText: "收集金币充能",
     skillDescription: "收集金币充满能量后，按 E 召唤强化护盾抵御危险。",
-    intro: "防守型角色，主动护盾优先级更高，容错空间更大。"
+    intro: "盾构不用多说"
   },
   js: {
     id: "js",
@@ -155,7 +164,7 @@ const characterConfigs = {
     readyText: "按 E 双倍得分",
     chargingText: "收集金币充能",
     skillDescription: "收集金币充满能量后，按 E 开启 20 秒双倍得分。",
-    intro: "冲榜型角色，适合在高速阶段集中爆发分数。"
+    intro: "我JS真的不爱钱"
   },
   wd: {
     id: "wd",
@@ -171,8 +180,40 @@ const characterConfigs = {
     chargeMax: reviveSkillChargeMax,
     readyText: "按 E 召唤扇子",
     chargingText: "收集金币充能",
-    skillDescription: "收集金币充满能量后，按 E 召唤复活扇，本局可复活一次。",
-    intro: "保命型角色，适合挑战更远距离和更高风险路线。"
+    skillDescription: "按 E 召唤复活扇，抵挡一次致命伤害，但每次使用会消耗，金币与距离得分增幅递减，第5次后不再增加。",
+    intro: "万事万物都有代价"
+  },
+  ljw: {
+    id: "ljw",
+    name: "LJW",
+    assetBase: "character/ljw",
+    headSrc: "character/ljw/ljw.png",
+    fallbackHeadSrc: "character_move/lsj.png",
+    headCrop: { x: 0, y: 0, w: 1, h: 1, scale: 1, offsetY: 0 },
+    skillType: "dash",
+    skillName: "飞行冲刺",
+    skillOrb: "冲",
+    chargeMax: ljwDashSkillChargeMax,
+    readyText: "按 E 飞行冲刺",
+    chargingText: "收集金币充能",
+    skillDescription: "收集金币充满能量后，按 E 飞行冲刺 200m，期间无敌并撞碎下铲障碍。",
+    intro: "我也有个超人梦"
+  },
+  csy: {
+    id: "csy",
+    name: "CSY",
+    assetBase: "character/csy",
+    headSrc: "character/csy/csy.png",
+    fallbackHeadSrc: "character_move/lsj.png",
+    headCrop: { x: 0, y: 0, w: 1, h: 1, scale: 1, offsetY: 0 },
+    skillType: "passive",
+    skillName: "异常体质",
+    skillOrb: "异",
+    chargeMax: 0,
+    readyText: "被动能力",
+    chargingText: "三段跳 / 强化道具",
+    skillDescription: "无主动技能。天生拥有三段跳，护盾与磁铁持续时间比其他角色多 2 秒。",
+    intro: "异于常人的能力者，周身持续散发微弱红色力场。"
   }
 };
 
@@ -192,6 +233,10 @@ const coinImage = new Image();
 coinImage.src = "character_move/coin.png";
 const plusCoinImage = new Image();
 plusCoinImage.src = "character/js/pluscoin.png";
+const ljwFlyImage = new Image();
+ljwFlyImage.src = "character/ljw/fly.png";
+const ljwDashPetImage = new Image();
+ljwDashPetImage.src = "character/ljw/pet.png";
 const cactusImage = new Image();
 cactusImage.src = "character_move/cactus.png";
 const roadblocksImage = new Image();
@@ -225,6 +270,10 @@ alarmAudio.volume = 0.8;
 const dreamAudio = new Audio("audio/dream.mp3");
 dreamAudio.preload = "auto";
 dreamAudio.volume = 0.72;
+const bgmAudio = new Audio("audio/bgm.mp3");
+bgmAudio.preload = "auto";
+bgmAudio.loop = true;
+bgmAudio.volume = 0.42;
 
 //头像载入
 headImage.src = characterConfigs.lsj.headSrc;

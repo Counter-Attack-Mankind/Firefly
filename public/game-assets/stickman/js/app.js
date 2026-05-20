@@ -73,6 +73,10 @@ function updateSecretProgressBar() {
   const skill = getCurrentCharacterConfig();
   const progress = state.inSecretRealm
     ? Math.min(100, Math.floor((state.secretDistance / secretRealmDistance) * 100))
+    : hasLjwDash()
+      ? Math.min(100, Math.floor((state.ljwDashDistance / ljwDashDistance) * 100))
+    : skill.skillType === "passive"
+      ? 100
     : Math.min(100, Math.floor((state.secretCharge / skill.chargeMax) * 100));
 
   if (progressFill) {
@@ -87,11 +91,19 @@ function updateSecretProgressBar() {
   if (progressText) {
     progressText.textContent = state.inSecretRealm
       ? `${Math.floor(state.secretDistance)} / ${secretRealmDistance}m`
+      : hasLjwDash()
+        ? `${Math.floor(state.ljwDashDistance)} / ${ljwDashDistance}m`
+      : skill.skillType === "passive"
+        ? "被动"
       : `${Math.floor(state.secretCharge)} / ${skill.chargeMax}`;
   }
   if (progressHint) {
     progressHint.textContent = state.inSecretRealm
       ? "秘境奔跑中"
+      : hasLjwDash()
+        ? "飞行冲刺中"
+      : skill.skillType === "passive"
+        ? skill.chargingText
       : hasDoubleScore()
         ? `双倍得分 ${Math.ceil((state.doubleScoreUntil - performance.now()) / 1000)}s`
       : state.secretReady
@@ -99,11 +111,11 @@ function updateSecretProgressBar() {
         : skill.chargingText;
   }
   progressRoot?.classList.toggle("is-ready", state.secretReady && !state.inSecretRealm);
-  progressRoot?.classList.toggle("is-active", state.inSecretRealm);
+  progressRoot?.classList.toggle("is-active", state.inSecretRealm || hasLjwDash());
   if (mobileSkillButton) {
     mobileSkillButton.style.setProperty("--skill-progress", progress);
     mobileSkillButton.classList.toggle("is-ready", state.secretReady && !state.inSecretRealm);
-    mobileSkillButton.classList.toggle("is-active", state.inSecretRealm);
+    mobileSkillButton.classList.toggle("is-active", state.inSecretRealm || hasLjwDash());
   }
 }
 
@@ -138,6 +150,7 @@ function updateCharacterCardsActive() {
 
 function updateCharacterPreview() {
   const character = getCurrentCharacterConfig();
+  const characterSelect = document.getElementById("characterSelect");
   const previewImage = document.getElementById("characterPreviewImage");
   const previewName = document.getElementById("characterPreviewName");
   const previewIntro = document.getElementById("characterPreviewIntro");
@@ -169,12 +182,13 @@ function renderCharacterCards() {
   options.innerHTML = pageItems
     .map((character) => {
       const activeClass = character.id === state.characterId ? " is-active" : "";
+      const chargeText = character.skillType === "passive" ? "被动能力" : `${character.chargeMax} 金币充能`;
       return `
         <button class="character-card${activeClass}" type="button" data-character-id="${character.id}">
           <img src="${character.headSrc}" alt="" />
           <span>${character.name}</span>
           <small>${character.readyText}</small>
-          <em>${character.chargeMax} 金币充能</em>
+          <em>${chargeText}</em>
         </button>
       `;
     })
@@ -563,3 +577,6 @@ updateMobileControlsButton();
 updateSecretProgressBar();
 updateCharacterSelectState();
 requestAnimationFrame(loop);
+  if (characterSelect) {
+    characterSelect.dataset.characterId = character.id;
+  }

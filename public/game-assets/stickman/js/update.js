@@ -8,7 +8,12 @@
 
   const dt = Math.min(deltaMs / 16.6667, 2);
   const reviveInvincible = hasReviveInvincible();
+  const ljwDashing = hasLjwDash();
+  const invincible = reviveInvincible || ljwDashing;
   state.prevSpeed = state.speed;
+  if (ljwDashing) {
+    state.speed = Math.max(state.speed, ljwDashSpeed);
+  }
   updatePets(deltaMs, dt);
 
   let currentGravity = gravity;
@@ -16,17 +21,28 @@
     currentGravity += fastFallAccel;
   }
 
-  player.vy += currentGravity * dt;
   const wasOnGround = player.onGround;
-  player.y += player.vy * dt;
+  if (ljwDashing) {
+    const hover = Math.sin(performance.now() * 0.009) * 6;
+    player.vy = 0;
+    player.y = ljwDashFlyY + hover;
+    player.onGround = false;
+    player.jumpsUsed = 0;
+    player.slideBlend = 0;
+  } else {
+    player.vy += currentGravity * dt;
+    player.y += player.vy * dt;
+  }
 
   const hb = playerHitbox();
   // 更严格：如果命中框左右任一位置在悬崖缺口内，就视为“无落脚点”。
   const leftFootX = hb.x + hb.w * 0.25;
   const rightFootX = hb.x + hb.w * 0.75;
-  const groundSolidNow = reviveInvincible || (isSolidGroundAt(leftFootX) && isSolidGroundAt(rightFootX));
+  const groundSolidNow = invincible || (isSolidGroundAt(leftFootX) && isSolidGroundAt(rightFootX));
 
-  if (groundSolidNow) {
+  if (ljwDashing) {
+    player.onGround = false;
+  } else if (groundSolidNow) {
     if (player.y >= playerGroundY) {
       player.y = playerGroundY;
       player.vy = 0;
@@ -46,6 +62,7 @@
         state.running = false;
         playGameOverSound();
         playLoseAudio();
+        stopBgm();
       }
     }
   }
@@ -237,8 +254,8 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
       coins.splice(i, 1);
       continue;
     }
-    if (hasPetCompanion()) {
-      applyCoinMagnet(c, dt);
+    if (hasPetCompanion() || ljwDashing) {
+      applyCoinMagnet(c, dt, ljwDashing);
     }
     const hb = playerHitbox();
     const cx = c.x;
@@ -278,7 +295,12 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
       obstacles.splice(i, 1);
       continue;
     }
-        if (!reviveInvincible && isObstacleColliding(o)) {
+    if (ljwDashing && o.type === "lowbar" && isObstacleColliding(o)) {
+      obstacles.splice(i, 1);
+      playShieldBreakSound();
+      continue;
+    }
+        if (!invincible && isObstacleColliding(o)) {
       if (hasShield()) {
         consumeShield();
         playShieldBreakSound();
@@ -288,6 +310,7 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
           state.running = false;
           playGameOverSound();
           playLoseAudio();
+          stopBgm();
         }
       }
     }
@@ -320,7 +343,7 @@ if (c.warning) {
   // 碰撞
   const hb = playerHitbox();
   if (
-    !reviveInvincible &&
+    !invincible &&
     hb.x < c.x + halfW &&
     hb.x + hb.w > c.x - halfW &&
     hb.y < c.y + halfH &&
@@ -335,18 +358,25 @@ if (c.warning) {
         state.running = false;
         playGameOverSound();
         playLoseAudio();
+        stopBgm();
       }
     }
   }
 }
   const runDistance = (0.05 + state.speed * 0.015) * dt;
   state.distance += runDistance;
+  if (ljwDashing) {
+    state.ljwDashDistance += runDistance;
+  }
   if (state.inSecretRealm) {
     state.secretDistance += runDistance;
   }
   state.score += runDistance * getScoreMultiplier();
   if (state.inSecretRealm && state.secretDistance >= secretRealmDistance) {
     exitSecretRealm();
+  }
+  if (ljwDashing && state.ljwDashDistance >= ljwDashDistance) {
+    finishLjwDash();
   }
 
 }
@@ -580,21 +610,23 @@ function pickNextSceneIndex(currentIndex) {
   return sceneOrder[(currentOrderIndex + 1) % sceneOrder.length];
 }
 
-function applyCoinMagnet(coin, dt) {
+function applyCoinMagnet(coin, dt, boosted = false) {
   const hb = playerHitbox();
   const targetX = hb.x + hb.w * 0.5;
   const targetY = hb.y + hb.h * 0.45;
   const dx = targetX - coin.x;
   const dy = targetY - coin.y;
   const distSq = dx * dx + dy * dy;
-  const radiusSq = petCoinMagnetRadius * petCoinMagnetRadius;
+  const radius = boosted ? ljwDashMagnetRadius : petCoinMagnetRadius;
+  const speed = boosted ? ljwDashMagnetSpeed : petCoinMagnetSpeed;
+  const radiusSq = radius * radius;
 
   if (distSq > radiusSq || distSq <= 0.001) {
     return;
   }
 
   const dist = Math.sqrt(distSq);
-  const pull = petCoinMagnetSpeed * dt * (1 - dist / petCoinMagnetRadius + 0.35);
+  const pull = speed * dt * (1 - dist / radius + 0.55);
   coin.x += dx * Math.min(1, pull);
   coin.y += dy * Math.min(1, pull);
 }

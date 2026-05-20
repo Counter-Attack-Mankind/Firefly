@@ -57,7 +57,13 @@
   wdFanActive: false,
   wdSkillUsed: false,
   wdReviveUsed: false,
-  wdReviveInvincibleUntil: 0
+  wdSkillUseCount: 0,
+  wdReviveInvincibleUntil: 0,
+  ljwDashActive: false,
+  ljwDashDistance: 0,
+  ljwDashStartY: playerGroundY,
+  ljwDashSavedSpeed: 6.6,
+  ljwLandingInvincibleUntil: 0
 
 };
 

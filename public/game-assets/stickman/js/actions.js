@@ -17,7 +17,13 @@
   state.wdFanActive = false;
   state.wdSkillUsed = false;
   state.wdReviveUsed = false;
+  state.wdSkillUseCount = 0;
   state.wdReviveInvincibleUntil = 0;
+  state.ljwDashActive = false;
+  state.ljwDashDistance = 0;
+  state.ljwDashStartY = playerGroundY;
+  state.ljwDashSavedSpeed = 6.6;
+  state.ljwLandingInvincibleUntil = 0;
   state.scoreSubmitted = false;
   state.lockReleasedForRun = false;
   if (typeof leaderboardResetRun === "function") {
@@ -71,6 +77,7 @@
   player.slideBlend = 0;
 
   losePlayed = false;
+  playBgm(true);
   updateScore();
 }
 
@@ -79,7 +86,7 @@ function addSecretCharge(amount) {
     return;
   }
   const skill = getCurrentCharacterConfig();
-  if (skill.skillType === "revive" && state.wdSkillUsed) {
+  if (skill.skillType === "passive") {
     return;
   }
   state.secretCharge = Math.min(skill.chargeMax, state.secretCharge + amount);
@@ -91,6 +98,9 @@ function addSecretCharge(amount) {
 
 function useChargedSkill() {
   const skill = getCurrentCharacterConfig();
+  if (skill.skillType === "passive") {
+    return;
+  }
   if (skill.skillType === "shield") {
     activateChargedShield();
     return;
@@ -103,6 +113,10 @@ function useChargedSkill() {
     activateReviveFan();
     return;
   }
+  if (skill.skillType === "dash") {
+    activateLjwDash();
+    return;
+  }
   enterSecretRealm();
 }
 
@@ -111,7 +125,15 @@ function hasDoubleScore() {
 }
 
 function getScoreMultiplier() {
-  return hasDoubleScore() ? 2 : 1;
+  return (hasDoubleScore() ? 2 : 1) * getWdSkillScoreMultiplier();
+}
+
+function getWdSkillScoreMultiplier() {
+  if (state.characterId !== "wd") {
+    return 1;
+  }
+  const index = Math.min(state.wdSkillUseCount, wdSkillScoreMultipliers.length - 1);
+  return wdSkillScoreMultipliers[index] ?? 0;
 }
 
 function activateDoubleScore() {
@@ -159,7 +181,7 @@ function activateReviveFan() {
     state.paused ||
     !state.secretReady ||
     state.inSecretRealm ||
-    state.wdSkillUsed
+    state.wdFanActive
   ) {
     return;
   }
@@ -167,6 +189,7 @@ function activateReviveFan() {
   state.secretReady = false;
   state.secretCharge = 0;
   state.wdSkillUsed = true;
+  state.wdSkillUseCount += 1;
   state.wdFanActive = true;
   state.wdReviveUsed = false;
   playSkillAudio();
@@ -204,7 +227,86 @@ function tryUseReviveFan() {
 }
 
 function hasReviveInvincible() {
-  return performance.now() < state.wdReviveInvincibleUntil;
+  const now = performance.now();
+  return now < state.wdReviveInvincibleUntil || now < state.ljwLandingInvincibleUntil;
+}
+
+function hasLjwDash() {
+  return state.ljwDashActive;
+}
+
+function activateLjwDash() {
+  if (
+    !state.started ||
+    !state.running ||
+    state.paused ||
+    !state.secretReady ||
+    state.inSecretRealm ||
+    state.sceneTransitionPhase !== "none"
+  ) {
+    return;
+  }
+
+  state.secretReady = false;
+  state.secretCharge = 0;
+  state.ljwDashActive = true;
+  state.ljwDashDistance = 0;
+  state.ljwDashStartY = player.y;
+  state.ljwDashSavedSpeed = state.speed;
+  state.downPressed = false;
+  player.vy = 0;
+  player.y = ljwDashFlyY;
+  player.onGround = false;
+  player.jumpsUsed = 0;
+  player.slideBlend = 0;
+  playSkillAudio();
+  if (typeof updateSecretProgressBar === "function") {
+    updateSecretProgressBar();
+  }
+}
+
+function finishLjwDash() {
+  if (!state.ljwDashActive) {
+    return;
+  }
+  state.ljwDashActive = false;
+  state.ljwDashDistance = 0;
+  state.speed = state.ljwDashSavedSpeed;
+  state.prevSpeed = state.speed;
+  state.ljwLandingInvincibleUntil = performance.now() + ljwLandingInvincibleMs;
+  player.y = playerGroundY;
+  player.vy = 0;
+  player.onGround = true;
+  player.jumpsUsed = 0;
+  player.slideBlend = 0;
+  clearLjwDashLandingZone();
+  playShieldBreakSound();
+  if (typeof updateSecretProgressBar === "function") {
+    updateSecretProgressBar();
+  }
+}
+
+function clearLjwDashLandingZone() {
+  const hb = playerHitbox();
+  const centerX = hb.x + hb.w * 0.5;
+  const centerY = hb.y + hb.h * 0.5;
+  removeDangerItemsNearPoint(obstacles, centerX, centerY, ljwDashClearRadius);
+  removeDangerItemsNearPoint(cliffs, centerX, groundY, ljwDashClearRadius);
+  removeDangerItemsNearPoint(cannonballs, centerX, centerY, ljwDashClearRadius);
+}
+
+function removeDangerItemsNearPoint(items, centerX, centerY, radius) {
+  const radiusSq = radius * radius;
+  for (let i = items.length - 1; i >= 0; i -= 1) {
+    const item = items[i];
+    const itemCenterX = item.x + (item.w || item.r * 2 || 0) * 0.5;
+    const itemCenterY = item.y + (item.h || item.r * 2 || 0) * 0.5;
+    const dx = itemCenterX - centerX;
+    const dy = itemCenterY - centerY;
+    if (dx * dx + dy * dy <= radiusSq) {
+      items.splice(i, 1);
+    }
+  }
 }
 
 function clearReviveDangerZone() {
@@ -302,13 +404,14 @@ function consumeShield() {
 }
 
 function activateShield(durationMs = shieldDurationMs, visual = "ring", soundType = "protect") {
+  const shieldDuration = state.characterId === "csy" ? durationMs + csyPowerupBonusMs : durationMs;
   if (hasShield() && state.shieldVisual === "pdh" && visual !== "pdh") {
     state.shieldUntil += activeShieldPickupBonusMs;
     playShieldAudio();
     return;
   }
   state.shieldHits = 1;
-  state.shieldUntil = performance.now() + durationMs;
+  state.shieldUntil = performance.now() + shieldDuration;
   state.shieldVisual = visual;
   if (soundType === "skill") {
     playSkillAudio();
@@ -317,14 +420,18 @@ function activateShield(durationMs = shieldDurationMs, visual = "ring", soundTyp
   playShieldAudio();
 }
 
+function getCurrentMaxJumps() {
+  return state.characterId === "csy" ? 3 : maxJumps;
+}
+
 function jump() {
-  if (!state.running || state.paused || player.jumpsUsed >= maxJumps) {
+  if (!state.running || state.paused || player.jumpsUsed >= getCurrentMaxJumps()) {
     return;
   }
-  const doubleJump = player.jumpsUsed === 1;
-  player.vy = doubleJump ? doubleJumpPower : jumpPower;
+  const airborneJump = player.jumpsUsed > 0;
+  player.vy = airborneJump ? doubleJumpPower : jumpPower;
   player.onGround = false;
   player.jumpsUsed += 1;
-  playJumpSound(doubleJump);
+  playJumpSound(airborneJump);
 }
 

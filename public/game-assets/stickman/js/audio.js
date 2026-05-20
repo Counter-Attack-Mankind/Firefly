@@ -1,5 +1,6 @@
 ﻿let losePlayed = false; // 防止一帧内多次触发
 let lastShieldAudioAt = 0;
+let bgmStarted = false;
 
 function getCharacterAudioSrc(fileName) {
   const character = getCurrentCharacterConfig();
@@ -52,6 +53,27 @@ function playLoseAudio() {
 function playStartSound() {
   playAudioWithFallback(getCharacterAudioSources("begin", "audio/begin.mp3"), 0.6, "启动音效");
 }
+
+function playBgm(restart = false) {
+  try {
+    if (restart || !bgmStarted) {
+      bgmAudio.currentTime = 0;
+      bgmStarted = true;
+    }
+    bgmAudio.play().catch(() => {});
+  } catch (e) {
+    console.warn("背景音乐播放失败:", e);
+  }
+}
+
+function stopBgm() {
+  try {
+    bgmAudio.pause();
+  } catch (e) {
+    console.warn("背景音乐暂停失败:", e);
+  }
+}
+
 function playShieldAudio() {
   const now = performance.now();
   if (now - lastShieldAudioAt < 120) {
