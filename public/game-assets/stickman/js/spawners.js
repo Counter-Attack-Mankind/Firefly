@@ -301,9 +301,9 @@ function buildJumpCoinArc(r, obstacle = null) {
   }
 
   const centerX = o.x + o.w * 0.5;
-  const spacing = 34 + Math.min(10, state.speed * 0.8);
-  const baseY = Math.min(groundY - 52, o.y - 18);
-  const peakY = Math.max(groundY - 160, o.y - 58 - Math.min(28, state.speed * 1.8));
+  const spacing = 48 + Math.min(14, state.speed * 0.95);
+  const baseY = Math.min(groundY - 72, o.y - 30);
+  const peakY = Math.min(groundY - 188, o.y - 88 - Math.min(38, state.speed * 2.2));
 
   return Array.from({ length: 5 }, (_, i) => {
     const offset = i - 2;

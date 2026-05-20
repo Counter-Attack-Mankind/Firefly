@@ -39,7 +39,7 @@
                 <button class="character-card is-active" type="button" data-character-id="lsj">
                   <img src="character/lsj/lsj.png" alt="" />
                   <span>LSJ</span>
-                  <small>400 金币进入秘境</small>
+                  <small>300 金币进入秘境</small>
                 </button>
               <button class="character-card" type="button" data-character-id="pdh">
                 <img src="character/pdh/pdh.png" alt="" />
@@ -101,6 +101,21 @@
             <button id="mobileJumpButton" class="mobile-action mobile-action-jump" type="button" aria-label="跳跃">
               <span>跳跃</span>
             </button>
+          </div>
+          <div id="settlementOverlay" class="settlement-overlay" aria-hidden="true">
+            <div class="settlement-panel" role="dialog" aria-modal="true" aria-labelledby="settlementTitle">
+              <div id="settlementTitle" class="settlement-title">恭喜您！</div>
+              <div id="settlementScore" class="settlement-score">您的得分为 0</div>
+              <p id="settlementMessage" class="settlement-message"></p>
+              <form id="settlementForm" class="settlement-form">
+                <label for="settlementNameInput">请输入名称</label>
+                <div class="settlement-input-row">
+                  <input id="settlementNameInput" maxlength="16" autocomplete="nickname" placeholder="玩家名称" />
+                  <button id="settlementSubmitButton" type="submit">记录排行</button>
+                </div>
+              </form>
+              <button id="settlementRestartButton" class="settlement-restart-button" type="button">再来一局</button>
+            </div>
           </div>
         </div>
         <div class="tips">

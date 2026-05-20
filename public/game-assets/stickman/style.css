@@ -667,8 +667,8 @@ body.parent-fullscreen-mode .mobile-controls {
 
 .mobile-action {
   position: absolute;
-  width: clamp(56px, 7.8vw, 76px);
-  height: clamp(56px, 7.8vw, 76px);
+  width: clamp(112px, 15.6vw, 152px);
+  height: clamp(112px, 15.6vw, 152px);
   display: grid;
   place-items: center;
   border: 2px solid rgba(255, 255, 255, 0.48);
@@ -681,7 +681,7 @@ body.parent-fullscreen-mode .mobile-controls {
     inset 0 0 18px rgba(255, 255, 255, 0.12);
   color: #ffffff;
   cursor: pointer;
-  font-size: clamp(12px, 1.15vw, 14px);
+  font-size: clamp(18px, 2vw, 26px);
   font-weight: 900;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   pointer-events: auto;
@@ -694,7 +694,7 @@ body.parent-fullscreen-mode .mobile-controls {
 .mobile-action::before {
   content: "";
   position: absolute;
-  inset: 7px;
+  inset: 14px;
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: inherit;
 }
@@ -708,23 +708,23 @@ body.parent-fullscreen-mode .mobile-controls {
 }
 
 .mobile-action-slide {
-  left: clamp(22px, 5vw, 58px);
+  left: clamp(52px, 8vw, 96px);
   bottom: clamp(24px, 8vw, 72px);
 }
 
 .mobile-action-jump {
   right: clamp(22px, 5vw, 58px);
   bottom: clamp(24px, 8vw, 72px);
-  width: clamp(66px, 9.2vw, 90px);
-  height: clamp(66px, 9.2vw, 90px);
+  width: clamp(132px, 18.4vw, 180px);
+  height: clamp(132px, 18.4vw, 180px);
 }
 
 .mobile-action-skill {
   --skill-progress: 0;
   left: clamp(18px, 4vw, 46px);
   top: 42%;
-  width: clamp(52px, 7.2vw, 70px);
-  height: clamp(52px, 7.2vw, 70px);
+  width: clamp(104px, 14.4vw, 140px);
+  height: clamp(104px, 14.4vw, 140px);
   transform: translateY(-50%);
   border-color: rgba(255, 238, 166, 0.62);
   background:
@@ -735,7 +735,7 @@ body.parent-fullscreen-mode .mobile-controls {
 .mobile-action-skill::after {
   content: "";
   position: absolute;
-  inset: -8px;
+  inset: -16px;
   border-radius: inherit;
   background:
     conic-gradient(
@@ -765,6 +765,134 @@ body.parent-fullscreen-mode .mobile-controls {
 .mobile-action-skill:active,
 .mobile-action-skill.is-pressed {
   transform: translateY(-50%) scale(0.94);
+}
+
+.settlement-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(250, 204, 21, 0.24), transparent 30%),
+    rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(6px);
+}
+
+.settlement-overlay.is-active {
+  display: flex;
+}
+
+body.parent-fullscreen-mode .settlement-overlay {
+  position: fixed;
+  inset: 0;
+}
+
+.settlement-panel {
+  width: min(430px, 100%);
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(255, 238, 166, 0.58);
+  border-radius: 16px;
+  padding: 24px;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.9)),
+    radial-gradient(circle at 50% 0, rgba(250, 204, 21, 0.28), transparent 42%);
+  box-shadow:
+    0 22px 60px rgba(15, 23, 42, 0.38),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  text-align: center;
+}
+
+.settlement-title {
+  color: #fef3c7;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.settlement-score {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.settlement-message {
+  min-height: 28px;
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.settlement-form {
+  display: none;
+  gap: 8px;
+  text-align: left;
+}
+
+.settlement-form.is-active {
+  display: grid;
+}
+
+.settlement-form label {
+  color: #fde68a;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.settlement-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.settlement-input-row input {
+  min-width: 0;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 800;
+  outline: none;
+}
+
+.settlement-input-row input:focus {
+  border-color: #facc15;
+  box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.18);
+}
+
+.settlement-input-row button,
+.settlement-restart-button {
+  height: 42px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 14px;
+  background: linear-gradient(90deg, #facc15, #fb923c);
+  color: #421708;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 10px 24px rgba(251, 146, 60, 0.26);
+}
+
+.settlement-input-row button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.settlement-restart-button {
+  justify-self: center;
+  min-width: 118px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2);
 }
 
 .pause-icon {
