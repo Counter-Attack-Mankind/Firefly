@@ -11,6 +11,8 @@ const doubleJumpPower = -16.4;
 const maxJumps = 2;
 const shieldDurationMs = 5000;
 const csyPowerupBonusMs = 2000;
+const csySlideChargeMax = 100;
+const csySlideChargePerSecond = 45;
 const activeShieldPickupBonusMs = 500;
 const coinBonus = 10;
 const highScoreKey = "stickman_runner_highscore_v1";
@@ -206,14 +208,14 @@ const characterConfigs = {
     headSrc: "character/csy/csy.png",
     fallbackHeadSrc: "character_move/lsj.png",
     headCrop: { x: 0, y: 0, w: 1, h: 1, scale: 1, offsetY: 0 },
-    skillType: "passive",
-    skillName: "异常体质",
-    skillOrb: "异",
-    chargeMax: 0,
-    readyText: "被动能力",
-    chargingText: "三段跳 / 强化道具",
-    skillDescription: "无主动技能。天生拥有三段跳，护盾与磁铁持续时间比其他角色多 2 秒。",
-    intro: "异于常人的能力者，周身持续散发微弱红色力场。"
+    skillType: "slideCharge",
+    skillName: "体育生沉淀",
+    skillOrb: "跃",
+    chargeMax: csySlideChargeMax,
+    readyText: "三段跳已就绪",
+    chargingText: "下铲充能三段跳",
+    skillDescription: "无主动释放。通过地面下铲充能，充满后获得一次三段跳机会；护盾与磁铁持续时间多 2 秒。",
+    intro: "异于常人的能力者，三段跳蓄力完成后会散发微弱红色力场。"
   }
 };
 

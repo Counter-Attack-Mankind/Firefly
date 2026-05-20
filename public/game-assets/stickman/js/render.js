@@ -419,7 +419,7 @@ function drawLjwDashPlayer() {
 }
 
 function drawCsyForceField() {
-  if (state.characterId !== "csy") {
+  if (state.characterId !== "csy" || !state.secretReady) {
     return;
   }
   const now = performance.now();

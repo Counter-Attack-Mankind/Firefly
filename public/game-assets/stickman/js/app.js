@@ -77,6 +77,8 @@ function updateSecretProgressBar() {
       ? Math.min(100, Math.floor((state.ljwDashDistance / ljwDashDistance) * 100))
     : skill.skillType === "passive"
       ? 100
+    : skill.skillType === "slideCharge"
+      ? Math.min(100, Math.floor((state.secretCharge / skill.chargeMax) * 100))
     : Math.min(100, Math.floor((state.secretCharge / skill.chargeMax) * 100));
 
   if (progressFill) {
@@ -95,6 +97,8 @@ function updateSecretProgressBar() {
         ? `${Math.floor(state.ljwDashDistance)} / ${ljwDashDistance}m`
       : skill.skillType === "passive"
         ? "被动"
+      : skill.skillType === "slideCharge"
+        ? `${Math.floor(state.secretCharge)} / ${skill.chargeMax}`
       : `${Math.floor(state.secretCharge)} / ${skill.chargeMax}`;
   }
   if (progressHint) {
@@ -104,16 +108,22 @@ function updateSecretProgressBar() {
         ? "飞行冲刺中"
       : skill.skillType === "passive"
         ? skill.chargingText
+      : skill.skillType === "slideCharge"
+        ? state.secretReady
+          ? skill.readyText
+          : skill.chargingText
       : hasDoubleScore()
         ? `双倍得分 ${Math.ceil((state.doubleScoreUntil - performance.now()) / 1000)}s`
       : state.secretReady
         ? skill.readyText
         : skill.chargingText;
   }
+  progressRoot?.classList.toggle("is-csy-charge", skill.skillType === "slideCharge");
   progressRoot?.classList.toggle("is-ready", state.secretReady && !state.inSecretRealm);
   progressRoot?.classList.toggle("is-active", state.inSecretRealm || hasLjwDash());
   if (mobileSkillButton) {
     mobileSkillButton.style.setProperty("--skill-progress", progress);
+    mobileSkillButton.classList.toggle("is-csy-charge", skill.skillType === "slideCharge");
     mobileSkillButton.classList.toggle("is-ready", state.secretReady && !state.inSecretRealm);
     mobileSkillButton.classList.toggle("is-active", state.inSecretRealm || hasLjwDash());
   }
@@ -182,7 +192,11 @@ function renderCharacterCards() {
   options.innerHTML = pageItems
     .map((character) => {
       const activeClass = character.id === state.characterId ? " is-active" : "";
-      const chargeText = character.skillType === "passive" ? "被动能力" : `${character.chargeMax} 金币充能`;
+      const chargeText = character.skillType === "passive"
+        ? "被动能力"
+        : character.skillType === "slideCharge"
+          ? "下铲充能"
+          : `${character.chargeMax} 金币充能`;
       return `
         <button class="character-card${activeClass}" type="button" data-character-id="${character.id}">
           <img src="${character.headSrc}" alt="" />

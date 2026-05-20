@@ -121,6 +121,9 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
   } else {
     player.slideBlend = Math.max(0, player.slideBlend - 0.14 * dt);
   }
+  if (state.characterId === "csy" && targetSlide > 0 && player.slideBlend > 0.45) {
+    addCsySlideCharge(deltaMs);
+  }
 
   state.dayTime += state.dayDirection * deltaMs * 0.000015;
   if (state.dayTime > 1) {

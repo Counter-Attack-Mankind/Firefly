@@ -86,7 +86,7 @@ function addSecretCharge(amount) {
     return;
   }
   const skill = getCurrentCharacterConfig();
-  if (skill.skillType === "passive") {
+  if (skill.skillType === "passive" || skill.skillType === "slideCharge") {
     return;
   }
   state.secretCharge = Math.min(skill.chargeMax, state.secretCharge + amount);
@@ -98,7 +98,7 @@ function addSecretCharge(amount) {
 
 function useChargedSkill() {
   const skill = getCurrentCharacterConfig();
-  if (skill.skillType === "passive") {
+  if (skill.skillType === "passive" || skill.skillType === "slideCharge") {
     return;
   }
   if (skill.skillType === "shield") {
@@ -421,7 +421,21 @@ function activateShield(durationMs = shieldDurationMs, visual = "ring", soundTyp
 }
 
 function getCurrentMaxJumps() {
-  return state.characterId === "csy" ? 3 : maxJumps;
+  return state.characterId === "csy" && state.secretReady ? 3 : maxJumps;
+}
+
+function addCsySlideCharge(deltaMs) {
+  if (state.characterId !== "csy" || state.secretReady) {
+    return;
+  }
+  state.secretCharge = Math.min(
+    csySlideChargeMax,
+    state.secretCharge + (csySlideChargePerSecond * deltaMs) / 1000
+  );
+  state.secretReady = state.secretCharge >= csySlideChargeMax;
+  if (typeof updateSecretProgressBar === "function") {
+    updateSecretProgressBar();
+  }
 }
 
 function jump() {
@@ -429,9 +443,17 @@ function jump() {
     return;
   }
   const airborneJump = player.jumpsUsed > 0;
+  const consumesCsyTripleJump = state.characterId === "csy" && player.jumpsUsed === 2 && state.secretReady;
   player.vy = airborneJump ? doubleJumpPower : jumpPower;
   player.onGround = false;
   player.jumpsUsed += 1;
+  if (consumesCsyTripleJump) {
+    state.secretReady = false;
+    state.secretCharge = 0;
+    if (typeof updateSecretProgressBar === "function") {
+      updateSecretProgressBar();
+    }
+  }
   playJumpSound(airborneJump);
 }
 

@@ -20,31 +20,27 @@ draft: false
 
 ### 版本 1
 
-<video controls preload="metadata" style="width: 100%; border-radius: 12px; margin: 0.75rem 0 1.5rem;">
-  <source src="/assets/posts/dirary/2026-05-20/videos/v1.mp4" type="video/mp4" />
-  当前浏览器不支持视频播放。
-</video>
+<iframe src="https://player.bilibili.com/player.html?bvid=BV1eGLm6eEan&page=1&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; margin: 0.75rem 0 0.5rem;"></iframe>
+
+[在 B 站打开版本 1](https://www.bilibili.com/video/BV1eGLm6eEan/?vd_source=c7479589abf8957bed689bced4a49d56)
 
 ### 版本 2
 
-<video controls preload="metadata" style="width: 100%; border-radius: 12px; margin: 0.75rem 0 1.5rem;">
-  <source src="/assets/posts/dirary/2026-05-20/videos/v2.mp4" type="video/mp4" />
-  当前浏览器不支持视频播放。
-</video>
+<iframe src="https://player.bilibili.com/player.html?bvid=BV1vGLm6eEwU&page=1&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; margin: 0.75rem 0 0.5rem;"></iframe>
+
+[在 B 站打开版本 2](https://www.bilibili.com/video/BV1vGLm6eEwU/)
 
 ### 版本 3
 
-<video controls preload="metadata" style="width: 100%; border-radius: 12px; margin: 0.75rem 0 1.5rem;">
-  <source src="/assets/posts/dirary/2026-05-20/videos/v3.mp4" type="video/mp4" />
-  当前浏览器不支持视频播放。
-</video>
+<iframe src="https://player.bilibili.com/player.html?bvid=BV1RGLm6eEiF&page=1&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; margin: 0.75rem 0 0.5rem;"></iframe>
+
+[在 B 站打开版本 3](https://www.bilibili.com/video/BV1RGLm6eEiF/?vd_source=c7479589abf8957bed689bced4a49d56)
 
 ### 版本 4
 
-<video controls preload="metadata" style="width: 100%; border-radius: 12px; margin: 0.75rem 0 1.5rem;">
-  <source src="/assets/posts/dirary/2026-05-20/videos/v4.mp4" type="video/mp4" />
-  当前浏览器不支持视频播放。
-</video>
+<iframe src="https://player.bilibili.com/player.html?bvid=BV15GLm6eEmm&page=1&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; margin: 0.75rem 0 0.5rem;"></iframe>
+
+[在 B 站打开版本 4](https://www.bilibili.com/video/BV15GLm6eEmm/?vd_source=c7479589abf8957bed689bced4a49d56)
 
 ## 结算和选角
 
