@@ -37,7 +37,6 @@ body.parent-fullscreen-mode {
 body.parent-fullscreen-mode > *:not(.page-layout),
 body.parent-fullscreen-mode .leaderboard,
 body.parent-fullscreen-mode .debug-tools,
-body.parent-fullscreen-mode .character-select,
 body.parent-fullscreen-mode .tips {
   display: none !important;
 }
@@ -399,40 +398,50 @@ body.parent-fullscreen-mode #gameCanvas {
 }
 
 .character-select {
-  width: min(1200px, 100%);
-  max-width: 100%;
-  margin-top: 12px;
-  padding: 12px;
-  border: 1px solid rgba(255, 238, 166, 0.2);
-  border-radius: 10px;
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
   background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.88)),
-    radial-gradient(circle at 50% 20%, rgba(250, 204, 21, 0.2), transparent 38%);
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.2);
+    radial-gradient(circle at 50% 30%, rgba(250, 204, 21, 0.18), transparent 34%),
+    rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(7px);
 }
 
-.character-select.is-hidden {
-  display: block;
+.character-select.is-active {
+  display: flex;
 }
 
 .character-select-panel {
+  width: min(860px, 100%);
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: 1fr;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid rgba(255, 238, 166, 0.28);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.9)),
+    radial-gradient(circle at 50% 0, rgba(250, 204, 21, 0.2), transparent 42%);
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.38);
   color: #f8fafc;
 }
 
 .character-select-title {
   color: #fff7d6;
-  font-size: 16px;
+  font-size: 24px;
   font-weight: 900;
+  text-align: center;
   white-space: nowrap;
 }
 
 .character-options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -503,7 +512,8 @@ body.parent-fullscreen-mode #gameCanvas {
 }
 
 .character-start-button {
-  width: 96px;
+  justify-self: center;
+  width: min(220px, 100%);
   height: 42px;
   border: 0;
   border-radius: 9px;
@@ -667,8 +677,8 @@ body.parent-fullscreen-mode .mobile-controls {
 
 .mobile-action {
   position: absolute;
-  width: clamp(112px, 15.6vw, 152px);
-  height: clamp(112px, 15.6vw, 152px);
+  width: clamp(42px, 5.85vw, 57px);
+  height: clamp(42px, 5.85vw, 57px);
   display: grid;
   place-items: center;
   border: 2px solid rgba(255, 255, 255, 0.48);
@@ -681,7 +691,7 @@ body.parent-fullscreen-mode .mobile-controls {
     inset 0 0 18px rgba(255, 255, 255, 0.12);
   color: #ffffff;
   cursor: pointer;
-  font-size: clamp(18px, 2vw, 26px);
+  font-size: clamp(10px, 0.95vw, 12px);
   font-weight: 900;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   pointer-events: auto;
@@ -694,7 +704,7 @@ body.parent-fullscreen-mode .mobile-controls {
 .mobile-action::before {
   content: "";
   position: absolute;
-  inset: 14px;
+  inset: 6px;
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: inherit;
 }
@@ -715,16 +725,16 @@ body.parent-fullscreen-mode .mobile-controls {
 .mobile-action-jump {
   right: clamp(22px, 5vw, 58px);
   bottom: clamp(24px, 8vw, 72px);
-  width: clamp(132px, 18.4vw, 180px);
-  height: clamp(132px, 18.4vw, 180px);
+  width: clamp(50px, 6.9vw, 68px);
+  height: clamp(50px, 6.9vw, 68px);
 }
 
 .mobile-action-skill {
   --skill-progress: 0;
   left: clamp(18px, 4vw, 46px);
   top: 42%;
-  width: clamp(104px, 14.4vw, 140px);
-  height: clamp(104px, 14.4vw, 140px);
+  width: clamp(26px, 3.6vw, 35px);
+  height: clamp(26px, 3.6vw, 35px);
   transform: translateY(-50%);
   border-color: rgba(255, 238, 166, 0.62);
   background:
@@ -999,9 +1009,11 @@ body.parent-fullscreen-mode .settlement-overlay {
   .character-select-panel {
     grid-template-columns: 1fr;
     gap: 10px;
+    padding: 16px;
   }
 
   .character-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
 

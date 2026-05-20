@@ -5,8 +5,9 @@
   const shieldText = hasShield() ? " | 护盾: 1" : "";
   const doubleText = hasDoubleScore() ? " | 双倍: 1" : "";
   const petText = hasPetCompanion() ? " | 磁铁: 1" : "";
+  const fanText = state.wdFanActive ? " | 复活扇: 1" : "";
   const sceneText = ` | 场景: ${getCurrentSceneTheme().name}`;
-  scoreEl.textContent = `分数: ${score} | 距离: ${distance}m | 第一名: ${leaderboardTopScore}${sceneText}${shieldText}${doubleText}${petText}`;
+  scoreEl.textContent = `分数: ${score} | 距离: ${distance}m | 第一名: ${leaderboardTopScore}${sceneText}${shieldText}${doubleText}${petText}${fanText}`;
 }
 
 function updatePauseButton() {
@@ -118,6 +119,9 @@ function setCharacter(characterId) {
   if (character.shieldSkillImageSrc) {
     pdhSkillImage.src = character.shieldSkillImageSrc;
   }
+  if (character.fanSkillImageSrc) {
+    wdSkillImage.src = character.fanSkillImageSrc;
+  }
 
   document.querySelectorAll(".character-card").forEach((card) => {
     card.classList.toggle("is-active", card.getAttribute("data-character-id") === character.id);
@@ -127,6 +131,9 @@ function setCharacter(characterId) {
 
 function updateCharacterSelectState() {
   const locked = state.started && state.running;
+  const characterSelect = document.getElementById("characterSelect");
+  characterSelect?.classList.toggle("is-active", !locked);
+  characterSelect?.setAttribute("aria-hidden", locked ? "true" : "false");
   document.querySelectorAll(".character-card").forEach((card) => {
     card.disabled = locked;
   });
@@ -267,11 +274,11 @@ window.addEventListener("message", (event) => {
 
 canvas.addEventListener("pointerdown", () => {
   if (state.started && !state.running) {
-    restartRun();
+    updateCharacterSelectState();
     return;
   }
   if (!state.started) {
-    startGame();
+    updateCharacterSelectState();
   }
 });
 
@@ -391,6 +398,10 @@ pdhSkillImage.addEventListener("error", () => {
     return;
   }
   pdhSkillImage.src = character.fallbackShieldSkillImageSrc;
+});
+
+wdSkillImage.addEventListener("error", () => {
+  wdSkillImage.src = "";
 });
 
 setCharacter(state.characterId);

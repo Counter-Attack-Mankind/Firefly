@@ -14,6 +14,10 @@
   state.secretSavedSceneIndex = sceneOrder[0];
   state.secretCoinTimer = 0;
   state.doubleScoreUntil = 0;
+  state.wdFanActive = false;
+  state.wdSkillUsed = false;
+  state.wdReviveUsed = false;
+  state.wdReviveInvincibleUntil = 0;
   state.scoreSubmitted = false;
   state.lockReleasedForRun = false;
   if (typeof leaderboardResetRun === "function") {
@@ -75,6 +79,9 @@ function addSecretCharge(amount) {
     return;
   }
   const skill = getCurrentCharacterConfig();
+  if (skill.skillType === "revive" && state.wdSkillUsed) {
+    return;
+  }
   state.secretCharge = Math.min(skill.chargeMax, state.secretCharge + amount);
   state.secretReady = state.secretCharge >= skill.chargeMax;
   if (typeof updateSecretProgressBar === "function") {
@@ -90,6 +97,10 @@ function useChargedSkill() {
   }
   if (skill.skillType === "doubleScore") {
     activateDoubleScore();
+    return;
+  }
+  if (skill.skillType === "revive") {
+    activateReviveFan();
     return;
   }
   enterSecretRealm();
@@ -138,6 +149,80 @@ function activateChargedShield() {
   activateShield(shieldDurationMs * 2, "pdh", "skill");
   if (typeof updateSecretProgressBar === "function") {
     updateSecretProgressBar();
+  }
+}
+
+function activateReviveFan() {
+  if (
+    !state.started ||
+    !state.running ||
+    state.paused ||
+    !state.secretReady ||
+    state.inSecretRealm ||
+    state.wdSkillUsed
+  ) {
+    return;
+  }
+
+  state.secretReady = false;
+  state.secretCharge = 0;
+  state.wdSkillUsed = true;
+  state.wdFanActive = true;
+  state.wdReviveUsed = false;
+  playSkillAudio();
+  if (typeof updateSecretProgressBar === "function") {
+    updateSecretProgressBar();
+  }
+}
+
+function tryUseReviveFan() {
+  if (
+    state.characterId !== "wd" ||
+    !state.wdFanActive ||
+    state.wdReviveUsed
+  ) {
+    return false;
+  }
+
+  state.wdFanActive = false;
+  state.wdReviveUsed = true;
+  state.wdReviveInvincibleUntil = performance.now() + wdReviveInvincibleMs;
+  state.downPressed = false;
+  player.x = playerRunX;
+  player.y = playerGroundY;
+  player.vy = 0;
+  player.onGround = true;
+  player.jumpsUsed = 0;
+  player.slideBlend = 0;
+  clearReviveDangerZone();
+  playShieldBreakSound();
+  updateScore();
+  if (typeof updateSecretProgressBar === "function") {
+    updateSecretProgressBar();
+  }
+  return true;
+}
+
+function hasReviveInvincible() {
+  return performance.now() < state.wdReviveInvincibleUntil;
+}
+
+function clearReviveDangerZone() {
+  const left = player.x - 120;
+  const right = player.x + 520;
+  removeDangerItemsInRange(obstacles, left, right);
+  removeDangerItemsInRange(cliffs, left, right);
+  removeDangerItemsInRange(cannonballs, left, right);
+}
+
+function removeDangerItemsInRange(items, left, right) {
+  for (let i = items.length - 1; i >= 0; i -= 1) {
+    const item = items[i];
+    const itemLeft = item.x - (item.r || 0);
+    const itemRight = item.x + (item.w || item.r * 2 || 0);
+    if (itemRight > left && itemLeft < right) {
+      items.splice(i, 1);
+    }
   }
 }
 

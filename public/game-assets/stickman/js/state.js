@@ -53,7 +53,11 @@
   scoreSubmitted: false,
   lockReleasedForRun: false,
   debugDistances: false,
-  mobileControls: false
+  mobileControls: false,
+  wdFanActive: false,
+  wdSkillUsed: false,
+  wdReviveUsed: false,
+  wdReviveInvincibleUntil: 0
 
 };
 

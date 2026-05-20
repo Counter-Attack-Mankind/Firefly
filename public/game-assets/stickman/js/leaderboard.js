@@ -227,8 +227,9 @@ settlementFormEl?.addEventListener("submit", (event) => {
 });
 
 settlementRestartButtonEl?.addEventListener("click", () => {
-  if (typeof restartRun === "function") {
-    restartRun();
+  hideSettlement();
+  if (typeof updateCharacterSelectState === "function") {
+    updateCharacterSelectState();
   }
 });
 

@@ -17,7 +17,9 @@ const powerupWarningMs = 2000;
 const secretChargeMax = 300;       //lsj技能金币数量
 const shieldSkillChargeMax = 200;    //pdh技能金币数量
 const doubleScoreSkillChargeMax = 200;  //js技能金币数量
+const reviveSkillChargeMax = 10;  //wd技能金币数量
 const doubleScoreDurationMs = 10000;
+const wdReviveInvincibleMs = 2000;
 const secretChargePerCoin = 1;
 const secretRealmDistance = 100;
 const secretCoinSpacing = 62;
@@ -148,6 +150,21 @@ const characterConfigs = {
     chargeMax: doubleScoreSkillChargeMax,
     readyText: "按 E 双倍得分",
     chargingText: "收集金币充能"
+  },
+  wd: {
+    id: "wd",
+    name: "WD",
+    assetBase: "character/wd",
+    headSrc: "character/wd/wd.png",
+    fallbackHeadSrc: "character_move/lsj.png",
+    fanSkillImageSrc: "character/wd/skill.png",
+    headCrop: { x: 0, y: 0, w: 1, h: 1, scale: 1, offsetY: 0 },
+    skillType: "revive",
+    skillName: "复活扇",
+    skillOrb: "扇",
+    chargeMax: reviveSkillChargeMax,
+    readyText: "按 E 召唤扇子",
+    chargingText: "收集金币充能"
   }
 };
 
@@ -171,6 +188,8 @@ const roadblocksImage = new Image();
 roadblocksImage.src = "character_move/roadblocks.png";
 const pdhSkillImage = new Image();
 pdhSkillImage.src = characterConfigs.pdh.shieldSkillImageSrc;
+const wdSkillImage = new Image();
+wdSkillImage.src = characterConfigs.wd.fanSkillImageSrc;
 
 const pets = [];
 const petFollowDurationMs = 10000;

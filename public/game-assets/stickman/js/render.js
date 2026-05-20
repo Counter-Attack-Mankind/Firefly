@@ -349,6 +349,9 @@ function drawLimb(startX, startY, angleDeg, upperLen, lowerLen, bendDeg) {
 }
 
 function drawPlayer() {
+  if (hasReviveInvincible() && Math.sin(performance.now() * 0.03) < 0) {
+    return;
+  }
   const footY = player.y;
   const inAir = !player.onGround;
   const rising = player.vy < -1;
@@ -556,6 +559,32 @@ if (leftLegFront) {
       ctx.arc(0, 0, headSize * (0.62 + pulse * 0.09), 0, Math.PI * 2);
       ctx.stroke();
     }
+  }
+
+  if (state.wdFanActive) {
+    const now = performance.now();
+    const angle = now * 0.006;
+    const orbitX = Math.cos(angle) * headSize * 1.35;
+    const orbitY = Math.sin(angle) * headSize * 0.82 + headSize * 0.12;
+    const fanSize = headSize * 1.08;
+    ctx.save();
+    ctx.translate(orbitX, orbitY);
+    ctx.rotate(angle + Math.PI * 0.2);
+    ctx.globalAlpha = 0.92;
+    if (wdSkillImage.complete && wdSkillImage.naturalWidth > 0) {
+      ctx.drawImage(wdSkillImage, -fanSize / 2, -fanSize / 2, fanSize, fanSize);
+    } else {
+      ctx.fillStyle = "rgba(248, 250, 252, 0.9)";
+      ctx.strokeStyle = "rgba(245, 158, 11, 0.95)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-fanSize * 0.38, fanSize * 0.28);
+      ctx.quadraticCurveTo(0, -fanSize * 0.45, fanSize * 0.42, fanSize * 0.2);
+      ctx.lineTo(-fanSize * 0.38, fanSize * 0.28);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   ctx.restore();

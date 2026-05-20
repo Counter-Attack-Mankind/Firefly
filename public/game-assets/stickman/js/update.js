@@ -7,6 +7,7 @@
   }
 
   const dt = Math.min(deltaMs / 16.6667, 2);
+  const reviveInvincible = hasReviveInvincible();
   state.prevSpeed = state.speed;
   updatePets(deltaMs, dt);
 
@@ -23,7 +24,7 @@
   // 更严格：如果命中框左右任一位置在悬崖缺口内，就视为“无落脚点”。
   const leftFootX = hb.x + hb.w * 0.25;
   const rightFootX = hb.x + hb.w * 0.75;
-  const groundSolidNow = isSolidGroundAt(leftFootX) && isSolidGroundAt(rightFootX);
+  const groundSolidNow = reviveInvincible || (isSolidGroundAt(leftFootX) && isSolidGroundAt(rightFootX));
 
   if (groundSolidNow) {
     if (player.y >= playerGroundY) {
@@ -41,9 +42,11 @@
     player.onGround = false;
     // 掉落失败：进入悬崖缺口后，脚部下探到地面以下即判定失败
     if (player.vy > 0 && player.y >= groundY + 8) {
-      state.running = false;
-      playGameOverSound();
-      playLoseAudio(); 
+      if (!tryUseReviveFan()) {
+        state.running = false;
+        playGameOverSound();
+        playLoseAudio();
+      }
     }
   }
 
@@ -275,15 +278,17 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
       obstacles.splice(i, 1);
       continue;
     }
-        if (isObstacleColliding(o)) {
+        if (!reviveInvincible && isObstacleColliding(o)) {
       if (hasShield()) {
         consumeShield();
         playShieldBreakSound();
         obstacles.splice(i, 1);
       } else {
-        state.running = false;
-        playGameOverSound();
-        playLoseAudio(); 
+        if (!tryUseReviveFan()) {
+          state.running = false;
+          playGameOverSound();
+          playLoseAudio();
+        }
       }
     }
   }
@@ -315,6 +320,7 @@ if (c.warning) {
   // 碰撞
   const hb = playerHitbox();
   if (
+    !reviveInvincible &&
     hb.x < c.x + halfW &&
     hb.x + hb.w > c.x - halfW &&
     hb.y < c.y + halfH &&
@@ -325,9 +331,11 @@ if (c.warning) {
       playShieldBreakSound();
       cannonballs.splice(i, 1);
     } else {
-      state.running = false;
-      playGameOverSound();
-      playLoseAudio(); 
+      if (!tryUseReviveFan()) {
+        state.running = false;
+        playGameOverSound();
+        playLoseAudio();
+      }
     }
   }
 }
