@@ -735,7 +735,7 @@ body.parent-fullscreen-mode .mobile-controls {
 .mobile-action-skill::after {
   content: "";
   position: absolute;
-  inset: -16px;
+  inset: -8px;
   border-radius: inherit;
   background:
     conic-gradient(

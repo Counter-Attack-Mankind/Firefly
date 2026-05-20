@@ -266,18 +266,13 @@ window.addEventListener("message", (event) => {
 });
 
 canvas.addEventListener("pointerdown", () => {
-  if (state.mobileControls && state.started && !state.running) {
+  if (state.started && !state.running) {
     restartRun();
     return;
   }
   if (!state.started) {
     startGame();
-    return;
   }
-  if (state.paused) {
-    return;
-  }
-  handleJumpInput();
 });
 
 document.getElementById("pauseButton")?.addEventListener("pointerdown", (event) => {

@@ -205,8 +205,12 @@ function addCoin() {
     }
   }
   if (jumpPair) {
-    const addedArc = tryAddCoinPattern(buildJumpCoinArc(r, jumpPair[0]), r);
-    const addedLine = tryAddCoinPattern(buildBetweenObstacleCoinLine(r, jumpPair), r);
+    const addedArc = Math.random() < jumpCoinArcChance
+      ? tryAddCoinPattern(buildJumpCoinArc(r, jumpPair[0]), r)
+      : false;
+    const addedLine = Math.random() < betweenJumpCoinChance
+      ? tryAddCoinPattern(buildBetweenObstacleCoinLine(r, jumpPair), r)
+      : false;
     if (addedArc || addedLine) {
       return;
     }
@@ -233,10 +237,12 @@ function planCoinsForObstacle(obstacle) {
     return;
   }
 
-  tryAddCoinPattern(buildJumpCoinArc(r, obstacle), r, true);
+  if (Math.random() < jumpCoinArcChance) {
+    tryAddCoinPattern(buildJumpCoinArc(r, obstacle), r, true);
+  }
 
   const pair = findPreviousJumpPair(obstacle);
-  if (pair) {
+  if (pair && Math.random() < betweenJumpCoinChance) {
     tryAddCoinPattern(buildBetweenObstacleCoinLine(r, pair), r, true);
   }
 }
@@ -281,14 +287,29 @@ function buildBetweenObstacleCoinLine(r, pair = null) {
   }
 
   const [left, right] = pair;
-  const gapStart = left.x + left.w;
-  const gapEnd = right.x;
-  const centerX = (gapStart + gapEnd) * 0.5;
-  const spacing = 34;
-  const y = groundY - player.bodyHeight * 0.5;
+  const leftArc = buildJumpCoinArc(r, left);
+  const rightArc = buildJumpCoinArc(r, right);
+  if (!leftArc || !rightArc) {
+    return null;
+  }
 
-  return Array.from({ length: 4 }, (_, i) => ({
-    x: centerX + (i - 1.5) * spacing,
+  const leftBoundaryCoin = leftArc[leftArc.length - 1];
+  const rightBoundaryCoin = rightArc[0];
+  const leftCenterLimit = leftBoundaryCoin.x + r * 2;
+  const rightCenterLimit = rightBoundaryCoin.x - r * 2;
+  const centerSpan = rightCenterLimit - leftCenterLimit;
+  const spacing = 100;
+  if (centerSpan < spacing) {
+    return null;
+  }
+
+  const count = Math.min(5, Math.floor(centerSpan / spacing) + 1);
+  const centerX = (leftCenterLimit + rightCenterLimit) * 0.5;
+  const y = groundY - player.bodyHeight * 0.5;
+  const startX = centerX - ((count - 1) * spacing) * 0.5;
+
+  return Array.from({ length: count }, (_, i) => ({
+    x: startX + i * spacing,
     y,
     padding: -10
   }));
