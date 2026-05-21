@@ -83,6 +83,7 @@ function getRankForScore(score, entries = leaderboardEntries) {
 }
 
 function setSettlementVisible(visible) {
+  state.settlementVisible = visible;
   if (!settlementOverlayEl) {
     return;
   }
@@ -196,7 +197,7 @@ function leaderboardResetRun() {
 }
 
 function leaderboardTrackGameOver() {
-  if (!state.started || state.running || leaderboardSubmittedForRun || state.scoreSubmitted) {
+  if (!state.started || state.running || state.deathReviewActive || leaderboardSubmittedForRun || state.scoreSubmitted) {
     return;
   }
   leaderboardSubmittedForRun = true;

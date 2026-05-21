@@ -12,21 +12,104 @@ function addObstacle() {
   }
   const r = Math.random();
   const spawnX = getObstacleSpawnX();
-  if (r < 0.24) {
+  if (r < 0.18 && addSceneSpecialObstacle(spawnX)) {
+    return;
+  }
+  if (r < 0.38) {
     for (let attempt = 0; attempt < 12; attempt += 1) {
+      const theme = getCurrentSceneTheme();
       const x = getObstacleSpawnX();
-      const w = 88 + Math.random() * 34;
-      const y = -220 - Math.random() * 80;
-      const bottomY = groundY - (42 + Math.random() * 4);
-      const h = bottomY - y;
+      const w = lowbarVisualWidth + Math.random() * 28;
+      const h = lowbarVisualHeight;
+      const y = 0;
       if (isNearTunnelRange(x, x + w)) continue;
       if (hasCliffNearRange(x, x + w, getSafeDistance())) continue;
       if (hasJumpObstacleNearRange(x, x + w, lowbarJumpMinDistance)) continue;
-      addPlannedObstacle({ type: "lowbar", x, y, w, h });
+      addPlannedObstacle({ type: "lowbar", sceneId: theme.id, x, y, w, h });
       return;
     }
   }
   addJumpObstacleForScene(spawnX);
+}
+
+function addSceneSpecialObstacle(spawnX) {
+  if (state.sceneWorldFrozen || isNearTunnelRange(spawnX, spawnX + 170)) {
+    return false;
+  }
+  const theme = getCurrentSceneTheme();
+  let obstacle = null;
+
+  if (theme.id === "city") {
+    if (Math.random() < 0.5) {
+      const w = 62;
+      const h = 72;
+      obstacle = {
+        type: "trafficGate",
+        x: spawnX,
+        y: groundY + 1 - h,
+        w,
+        h,
+        lightPhase: Math.random() < 0.5 ? "red" : "green"
+      };
+    } else {
+      const w = 116;
+      const h = 156;
+      obstacle = {
+        type: "spikedMace",
+        x: spawnX,
+        y: 0,
+        w,
+        h,
+        swingRange: 56,
+        phase: Math.random() * Math.PI * 2
+      };
+    }
+  } else if (theme.id === "desert") {
+    const w = 118 + Math.random() * 34;
+    obstacle = {
+      type: "sandstorm",
+      x: spawnX,
+      y: groundY - 150,
+      w,
+      h: 92,
+      phase: Math.random() * Math.PI * 2
+    };
+  } else if (theme.id === "maze") {
+    if (Math.random() < 0.5) {
+      const w = 132 + Math.random() * 26;
+      obstacle = {
+        type: "palaceGate",
+        x: spawnX,
+        y: 0,
+        w,
+        h: groundY - lowbarGroundClearance
+      };
+    } else {
+      const w = 96;
+      const h = 116;
+      obstacle = {
+        type: "lanternSwing",
+        x: spawnX,
+        y: 0,
+        w,
+        h,
+        swingRange: 58,
+        phase: Math.random() * Math.PI * 2
+      };
+    }
+  }
+
+  if (!obstacle) {
+    return false;
+  }
+
+  const padding = obstacle.type === "spikedMace" ? 180 : lowbarJumpMinDistance;
+  if (hasCliffNearRange(obstacle.x, obstacle.x + obstacle.w, getSafeDistance())) return false;
+  if (hasLowbarNearRange(obstacle.x, obstacle.x + obstacle.w, padding)) return false;
+  if (hasJumpObstacleNearRange(obstacle.x, obstacle.x + obstacle.w, jumpObstacleMinDistance)) return false;
+
+  addPlannedObstacle(obstacle);
+  return true;
 }
 
 function getObstacleSpawnX() {
@@ -80,13 +163,13 @@ function addCannonball() {
 
   const lowY = groundY - 18;
   const highY = groundY - 120;
+  const speed = state.speed + 10;
 
   const wantHigh = state.nextCannonHigh;
 
   let y = wantHigh ? highY : lowY;
 
-  // 如果原计划是低炮弹，但附近有 lowbar，就强制改成高炮弹
-  if (!wantHigh && hasLowbarNearX(spawnX, 260)) {
+  if (!wantHigh && hasLowbarCannonTimingConflict(spawnX, speed)) {
     y = highY;
   }
 
@@ -98,7 +181,7 @@ function addCannonball() {
     h: rpgDrawHeight,
     hitW: rpgHitWidth,
     hitH: rpgHitHeight,
-    speed: state.speed + 10,
+    speed,
     spawnTime: performance.now(),
     warning: true
   });
@@ -107,6 +190,26 @@ function addCannonball() {
 
   // 高低炮弹交替
   state.nextCannonHigh = !state.nextCannonHigh;
+}
+
+function hasLowbarCannonTimingConflict(spawnX, cannonSpeed) {
+  const obstacleSpeed = Math.max(1, state.speed);
+  const missileArrivalFrames = 60 + Math.max(0, spawnX - player.x) / Math.max(1, cannonSpeed);
+
+  for (const obstacle of obstacles) {
+    if (obstacle.type !== "lowbar") continue;
+
+    const lowbarStartFrames = (obstacle.x - (player.x + 44)) / obstacleSpeed;
+    const lowbarEndFrames = (obstacle.x + obstacle.w - (player.x - 58)) / obstacleSpeed;
+    if (
+      missileArrivalFrames >= lowbarStartFrames - lowbarCannonConflictEnterBufferFrames &&
+      missileArrivalFrames <= lowbarEndFrames + lowbarCannonConflictExitBufferFrames
+    ) {
+      return true;
+    }
+  }
+
+  return hasLowbarNearX(spawnX, 260);
 }
 
 function addCliff() {
@@ -231,6 +334,15 @@ function addCoin() {
 
 function planCoinsForObstacle(obstacle) {
   const r = 10;
+
+  if (
+    obstacle.type === "palaceGate" ||
+    obstacle.type === "sandstorm" ||
+    obstacle.type === "spikedMace" ||
+    obstacle.type === "lanternSwing"
+  ) {
+    return;
+  }
 
   if (obstacle.type === "lowbar") {
     tryAddCoinPattern(buildSlideCoinLine(r, obstacle), r, true);

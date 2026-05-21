@@ -348,6 +348,101 @@ function drawLimb(startX, startY, angleDeg, upperLen, lowerLen, bendDeg) {
   ctx.stroke();
 }
 
+function drawCharacterPreview() {
+  const previewCanvas = document.getElementById("characterPreviewCanvas");
+  if (!previewCanvas) {
+    return;
+  }
+  const pctx = previewCanvas.getContext("2d");
+  if (!pctx) {
+    return;
+  }
+
+  const w = previewCanvas.width;
+  const h = previewCanvas.height;
+  pctx.clearRect(0, 0, w, h);
+  pctx.fillStyle = "rgba(2, 6, 23, 0.28)";
+  pctx.beginPath();
+  pctx.ellipse(w * 0.5, h - 30, 66, 10, 0, 0, Math.PI * 2);
+  pctx.fill();
+
+  const now = performance.now();
+  const phase = now * 0.011;
+  const stride = Math.sin(phase);
+  const bounce = Math.max(0, Math.sin(phase * 2)) * 2.2;
+  const bodyH = 72;
+  const headSize = 54;
+  const neckY = -bodyH;
+  const hipY = -bodyH * 0.36;
+  const shoulderY = neckY + 21;
+  const torsoLean = 0.13 + Math.max(0, Math.cos(phase * 2)) * 0.025;
+  const cx = w * 0.5;
+  const footY = h - 34;
+
+  const limb = (startX, startY, angleDeg, upperLen, lowerLen, bendDeg) => {
+    const a = (angleDeg * Math.PI) / 180;
+    const bx = startX + Math.cos(a) * upperLen;
+    const by = startY + Math.sin(a) * upperLen;
+    const b = ((angleDeg + bendDeg) * Math.PI) / 180;
+    const ex = bx + Math.cos(b) * lowerLen;
+    const ey = by + Math.sin(b) * lowerLen;
+    pctx.beginPath();
+    pctx.moveTo(startX, startY);
+    pctx.lineTo(bx, by);
+    pctx.lineTo(ex, ey);
+    pctx.stroke();
+  };
+
+  pctx.save();
+  pctx.translate(cx, footY - bounce);
+  pctx.rotate(torsoLean);
+  pctx.strokeStyle = "#000";
+  pctx.lineWidth = 5;
+  pctx.lineCap = "round";
+  pctx.lineJoin = "round";
+
+  pctx.beginPath();
+  pctx.moveTo(0, neckY);
+  pctx.lineTo(0, hipY);
+  pctx.stroke();
+
+  const leftLegSignal = stride;
+  const rightLegSignal = -stride;
+  const leftArmSignal = -leftLegSignal;
+  const rightArmSignal = -rightLegSignal;
+
+  const leftArmAngle = 62 - leftArmSignal * 96;
+  const rightArmAngle = 62 - rightArmSignal * 96;
+  const leftElbowBend = leftArmSignal > 0 ? 54 : -16;
+  const rightElbowBend = rightArmSignal > 0 ? 54 : -16;
+  const leftLegAngle = 82 - leftLegSignal * 42;
+  const rightLegAngle = 82 - rightLegSignal * 42;
+  const leftKneeBend = leftLegSignal > 0 ? 48 + leftLegSignal * 8 : 30 + (-leftLegSignal) * 18;
+  const rightKneeBend = rightLegSignal > 0 ? 48 + rightLegSignal * 8 : 30 + (-rightLegSignal) * 18;
+
+  limb(0, shoulderY, leftArmAngle, 15, 12, leftElbowBend);
+  limb(0, shoulderY, rightArmAngle, 15, 12, rightElbowBend);
+
+  if (leftLegSignal > rightLegSignal) {
+    limb(0, hipY, rightLegAngle, 19, 21, rightKneeBend);
+    limb(0, hipY, leftLegAngle, 19, 21, leftKneeBend);
+  } else {
+    limb(0, hipY, leftLegAngle, 19, 21, leftKneeBend);
+    limb(0, hipY, rightLegAngle, 19, 21, rightKneeBend);
+  }
+
+  pctx.translate(0, neckY - headSize / 2 + 2 + (getCurrentCharacterConfig().headCrop?.offsetY || 0));
+  const headDrawSize = headSize * (getCurrentCharacterConfig().headCrop?.scale || 1);
+  const headHalf = headDrawSize / 2;
+  if (headImage.complete && headImage.naturalWidth > 0) {
+    pctx.drawImage(headImage, -headHalf, -headHalf, headDrawSize, headDrawSize);
+  } else {
+    pctx.fillStyle = "#ccc";
+    pctx.fillRect(-headHalf, -headHalf, headDrawSize, headDrawSize);
+  }
+  pctx.restore();
+}
+
 function drawLjwDashPlayer() {
   const now = performance.now();
   const hover = Math.sin(now * 0.01) * 4;
@@ -522,52 +617,29 @@ function drawPlayer() {
   let headRotation = 0; 
 
   if (sliding) {
-    // --- 滑铲姿态优化 ---
     const slideT = Math.min(1, Math.max(0, player.slideBlend));
     const slideEase = slideT * slideT * (3 - 2 * slideT); // smoothstep
-    // 滑铲：两手向后撑地（向左），两腿向右伸（向右）
-    const torsoStartX = -6 - slideEase * 5;
-    const torsoStartY = -14 + slideEase * 5;
-    const torsoEndX = 22 + slideEase * 28;
-    const torsoEndY = -28 + slideEase * 10;
-    
-    ctx.beginPath();
-    ctx.moveTo(torsoStartX, torsoStartY);
-    ctx.lineTo(torsoEndX, torsoEndY);
-    ctx.stroke();
+    const bodyW = 166;
+    const bodyHSlide = bodyW / 3.65;
+    const bodyX = -72 - slideEase * 3;
+    const bodyY = -bodyHSlide + 22;
 
-    headPivotY = torsoEndY;
-    const headPivotX = torsoEndX;
-    // 头部旋转：顺着滑动方向倾斜
-    // Bind head tightly to the torso endpoint; avoid extra rotation to prevent
-    // visible gap/shake during the slide.
-    headRotation = 0;
+    if (slideBodyImage.complete && slideBodyImage.naturalWidth > 0) {
+      ctx.drawImage(slideBodyImage, bodyX, bodyY, bodyW, bodyHSlide);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(bodyX + 6, bodyY + bodyHSlide * 0.82);
+      ctx.lineTo(bodyX + 28, bodyY + bodyHSlide * 0.2);
+      ctx.lineTo(bodyX + 64, bodyY + bodyHSlide * 0.54);
+      ctx.lineTo(bodyX + bodyW - 10, bodyY + bodyHSlide * 0.78);
+      ctx.moveTo(bodyX + 54, bodyY + bodyHSlide * 0.55);
+      ctx.lineTo(bodyX + 96, bodyY + bodyHSlide * 0.18);
+      ctx.stroke();
+    }
 
-    const shoulderX = torsoStartX;
-    const shoulderY = torsoStartY;
-    const hipX = torsoEndX;
-    const hipY = torsoEndY;
-
-    // 手（向后撑地）
-    // angleDeg 在 90~180 会朝左且向下（sin>0），更贴合“撑地”效果
-    const leftArmAngle = 165 - slideEase * 6;
-    const leftElbowBend = 12 + slideEase * 6; // 确保第二段仍在 90~180，避免向上断开
-    const rightArmAngle = 176 - slideEase * 4;
-    // 保持第二段仍朝左下（避免超过 180 导致向上“打折”）
-    const rightElbowBend = 4 + slideEase * 1;
-    // 手短：上臂略短、前臂更短
-    drawLimb(shoulderX, shoulderY, leftArmAngle, 16, 10, leftElbowBend);
-    drawLimb(shoulderX, shoulderY, rightArmAngle, 14, 9, rightElbowBend);
-
-    // 腿（向右伸滑铲）
-    // angleDeg 在 0~90 会朝右且向下
-    const leftLegAngle = 42 + slideEase * 10;
-    const leftKneeBend = 18 - slideEase * 6; // 第二段仍保持 0~90 附近
-    const rightLegAngle = 22 + slideEase * 8;
-    const rightKneeBend = 24 - slideEase * 8;
-    // 腿长：更好看且线段连接更明显
-    drawLimb(hipX, hipY, leftLegAngle, 26, 18, leftKneeBend);
-    drawLimb(hipX, hipY, rightLegAngle, 26, 18, rightKneeBend);
+    headPivotY = bodyY + bodyHSlide * 0.38;
+    const headPivotX = bodyX + 24;
+    headRotation = -0.32 * slideEase;
 
     ctx.translate(headPivotX, headPivotY);
 
@@ -708,10 +780,10 @@ if (leftLegFront) {
 
   if (state.wdFanActive) {
     const now = performance.now();
-    const angle = now * 0.006;
-    const orbitX = Math.cos(angle) * headSize * 1.35;
-    const orbitY = Math.sin(angle) * headSize * 0.82 + headSize * 0.12;
-    const fanSize = headSize * 1.08;
+    const angle = now * 0.0055;
+    const orbitX = -headSize * 1.15 + Math.cos(angle) * headSize * 0.42;
+    const orbitY = -headSize * 0.88 + Math.sin(angle * 1.25) * headSize * 0.34;
+    const fanSize = headSize * 1.18;
     ctx.save();
     ctx.translate(orbitX, orbitY);
     ctx.rotate(angle + Math.PI * 0.2);
@@ -739,6 +811,26 @@ if (leftLegFront) {
 
 
 function drawObstacleItem(obstacle) {
+  if (obstacle.type === "trafficGate") {
+    drawTrafficGate(obstacle);
+    return;
+  }
+  if (obstacle.type === "sandstorm") {
+    drawSandstorm(obstacle);
+    return;
+  }
+  if (obstacle.type === "spikedMace") {
+    drawSpikedMace(obstacle);
+    return;
+  }
+  if (obstacle.type === "lanternSwing") {
+    drawLanternSwing(obstacle);
+    return;
+  }
+  if (obstacle.type === "palaceGate") {
+    drawPalaceGate(obstacle);
+    return;
+  }
   if (obstacle.type === "lowbar") {
     drawConstructionBar(obstacle);
     return;
@@ -754,40 +846,170 @@ function drawObstacleItem(obstacle) {
   drawMetalSpikes(obstacle);
 }
 
-function drawConstructionBar(obstacle) {
+function drawTrafficGate(obstacle) {
   const x = obstacle.x;
-  const bottomY = obstacle.y + obstacle.h;
-  const beamH = Math.min(18, Math.max(12, obstacle.h * 0.1));
-  const beamY = bottomY - beamH;
-
+  const y = obstacle.y;
+  const w = obstacle.w;
+  const h = obstacle.h;
   ctx.fillStyle = "rgba(0, 0, 0, 0.16)";
-  ctx.fillRect(x + 6, beamY + beamH + 3, obstacle.w - 12, 4);
+  ctx.fillRect(x + 8, groundY + 2, w - 16, 5);
 
-  ctx.fillStyle = "#4b3420";
-  ctx.fillRect(x + 6, obstacle.y, 6, obstacle.h);
-  ctx.fillRect(x + obstacle.w - 12, obstacle.y, 6, obstacle.h);
-
-  ctx.fillStyle = "#f08a24";
-  roundRect(x, beamY, obstacle.w, beamH, 4);
+  ctx.fillStyle = "#111827";
+  roundRect(x + w * 0.36, y, w * 0.28, h, 7);
   ctx.fill();
+  ctx.fillStyle = "#facc15";
+  roundRect(x + 4, y + h * 0.56, w - 8, h * 0.22, 5);
+  ctx.fill();
+  ctx.strokeStyle = "#78350f";
+  ctx.lineWidth = 3;
+  ctx.stroke();
 
-  ctx.save();
-  ctx.beginPath();
-  roundRect(x, beamY, obstacle.w, beamH, 4);
-  ctx.clip();
-  ctx.strokeStyle = "#fff3c4";
-  ctx.lineWidth = 7;
-  for (let stripeX = x - obstacle.w; stripeX < x + obstacle.w * 1.8; stripeX += 26) {
+  const lights = [
+    ["red", "#ef4444"],
+    ["yellow", "#facc15"],
+    ["green", "#22c55e"]
+  ];
+  for (let i = 0; i < lights.length; i += 1) {
+    const [name, color] = lights[i];
+    ctx.fillStyle = name === obstacle.lightPhase ? color : "rgba(148, 163, 184, 0.45)";
     ctx.beginPath();
-    ctx.moveTo(stripeX, beamY + beamH + 6);
-    ctx.lineTo(stripeX + 22, beamY - 6);
-    ctx.stroke();
+    ctx.arc(x + w * 0.5, y + 12 + i * 15, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawSandstorm(obstacle) {
+  // 沙尘暴只作为视野限制事件，具体遮罩在 drawSandstormOverlay 中绘制。
+}
+
+function drawSandstormOverlay() {
+  const now = performance.now();
+  const warningActive = now < state.sandstormWarningUntil;
+  const stormActive = now < state.sandstormUntil;
+  if (!warningActive && !stormActive) {
+    return;
+  }
+  ctx.save();
+  if (stormActive) {
+    const hb = playerHitbox();
+    const cx = hb.x + hb.w * 0.5 + 50;
+    const cy = hb.y + hb.h * 0.48;
+    const mask = ctx.createRadialGradient(cx, cy, 250, cx, cy, 275);
+    mask.addColorStop(0, "rgba(0, 0, 0, 0)");
+    mask.addColorStop(1, "rgba(0, 0, 0, 1)");
+    ctx.fillStyle = mask;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  if (warningActive) {
+    const alpha = Math.sin(now * 0.018) > 0 ? 0.98 : 0.28;
+    ctx.fillStyle = `rgba(220, 38, 38, ${alpha})`;
+    ctx.font = "bold 34px Microsoft YaHei, Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("沙尘暴出现！！", canvas.width / 2, 76);
   }
   ctx.restore();
+}
 
-  ctx.strokeStyle = "#7a4319";
-  ctx.lineWidth = 2;
-  roundRect(x, beamY, obstacle.w, beamH, 4);
+function drawSpikedMace(obstacle) {
+  const anchorX = obstacle.x + obstacle.w * 0.5;
+  const anchorY = 0;
+  const swing = getLanternSwingOffset(obstacle);
+  const maceX = anchorX + swing;
+  const maceY = groundY - 126;
+  ctx.strokeStyle = "rgba(71, 85, 105, 0.95)";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(anchorX, anchorY);
+  ctx.lineTo(maceX, maceY);
+  ctx.stroke();
+  ctx.fillStyle = "#334155";
+  ctx.beginPath();
+  ctx.arc(maceX, maceY + 24, 24, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#0f172a";
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 8; i += 1) {
+    const a = (Math.PI * 2 * i) / 8;
+    ctx.beginPath();
+    ctx.moveTo(maceX + Math.cos(a) * 20, maceY + 24 + Math.sin(a) * 20);
+    ctx.lineTo(maceX + Math.cos(a) * 34, maceY + 24 + Math.sin(a) * 34);
+    ctx.stroke();
+  }
+}
+
+function drawLanternSwing(obstacle) {
+  const anchorX = obstacle.x + obstacle.w * 0.5;
+  const anchorY = 0;
+  const swing = getLanternSwingOffset(obstacle);
+  const lanternX = anchorX + swing;
+  const lanternY = groundY - 118;
+  ctx.strokeStyle = "rgba(250, 204, 21, 0.75)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(anchorX, anchorY);
+  ctx.lineTo(lanternX, lanternY - 28);
+  ctx.stroke();
+  ctx.fillStyle = "#dc2626";
+  roundRect(lanternX - 18, lanternY - 26, 36, 46, 12);
+  ctx.fill();
+  ctx.fillStyle = "#facc15";
+  ctx.fillRect(lanternX - 14, lanternY - 20, 28, 5);
+  ctx.fillRect(lanternX - 14, lanternY + 13, 28, 5);
+  ctx.globalAlpha = 0.28;
+  ctx.fillStyle = "#fef3c7";
+  ctx.beginPath();
+  ctx.arc(lanternX, lanternY, 44, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+function drawPalaceGate(obstacle) {
+  const x = obstacle.x;
+  const y = obstacle.y;
+  const w = obstacle.w;
+  const h = obstacle.h;
+  ctx.fillStyle = "rgba(0, 0, 0, 0.16)";
+  ctx.fillRect(x + 12, groundY + 2, w - 24, 5);
+  const grad = ctx.createLinearGradient(x, y, x, y + h);
+  grad.addColorStop(0, "#7f1d1d");
+  grad.addColorStop(0.7, "#b91c1c");
+  grad.addColorStop(1, "#450a0a");
+  ctx.fillStyle = grad;
+  roundRect(x, y, w, h, 4);
+  ctx.fill();
+  ctx.fillStyle = "#facc15";
+  ctx.fillRect(x + 8, y + h - 20, w - 16, 8);
+  for (let i = 0; i < 4; i += 1) {
+    ctx.beginPath();
+    ctx.arc(x + 18 + i * ((w - 36) / 3), y + h - 36, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawConstructionBar(obstacle) {
+  const rect = getLowbarVisualRect(obstacle);
+  const img = getLowbarImageForObstacle(obstacle);
+
+  ctx.fillStyle = "rgba(0, 0, 0, 0.16)";
+  ctx.fillRect(rect.x + rect.w * 0.08, groundY + 2, rect.w * 0.84, 5);
+
+  if (img?.complete && img.naturalWidth > 0) {
+    ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h);
+    return;
+  }
+
+  ctx.fillStyle = "#f08a24";
+  roundRect(rect.x, rect.y, rect.w, rect.h - lowbarGroundClearance, 5);
+  ctx.fill();
+  ctx.strokeStyle = "#fff3c4";
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(rect.x + rect.w * 0.18, rect.y + rect.h * 0.66);
+  ctx.lineTo(rect.x + rect.w * 0.48, rect.y + rect.h * 0.4);
+  ctx.moveTo(rect.x + rect.w * 0.52, rect.y + rect.h * 0.66);
+  ctx.lineTo(rect.x + rect.w * 0.82, rect.y + rect.h * 0.4);
   ctx.stroke();
 }
 
@@ -1124,11 +1346,19 @@ function drawGameOver() {
   if (!state.started || state.running) {
     return;
   }
-  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+  ctx.fillStyle = state.deathReviewActive ? "rgba(15, 23, 42, 0.22)" : "rgba(0, 0, 0, 0.5)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#fff";
-  ctx.font = "bold 54px Microsoft YaHei";
+  ctx.font = state.deathReviewActive ? "bold 34px Microsoft YaHei" : "bold 54px Microsoft YaHei";
   ctx.textAlign = "center";
+  if (state.deathReviewActive) {
+    ctx.fillText("死亡定格", canvas.width / 2, 54);
+    ctx.font = "18px Microsoft YaHei";
+    ctx.fillText("绿色为玩家碰撞框，红色/橙色为危险区域", canvas.width / 2, 86);
+    const ready = performance.now() >= state.deathReviewReadyAt;
+    ctx.fillText(ready ? "按任意键或点击画面进入结算" : "松开按键后稍等一下再确认", canvas.width / 2, 112);
+    return;
+  }
   ctx.fillText("游戏结束", canvas.width / 2, canvas.height / 2 - 15);
   ctx.font = "26px Microsoft YaHei";
   ctx.fillText("按 R 重新开始", canvas.width / 2, canvas.height / 2 + 38);
@@ -1216,18 +1446,21 @@ function drawSceneTransition() {
 }
 
 function drawDebugDistances() {
-  if (!state.debugDistances) {
+  if (!state.debugDistances && !state.deathReviewActive) {
     return;
   }
 
   const hazards = [
-    ...obstacles.map((o) => ({
-      type: o.type,
-      x: o.x,
-      y: o.y,
-      w: o.w,
-      h: o.h
-    })),
+    ...obstacles.map((o) => {
+      const box = typeof getObstacleCollisionBox === "function" ? getObstacleCollisionBox(o) : o;
+      return {
+        type: o.type,
+        x: box.x,
+        y: box.y,
+        w: box.w,
+        h: box.h
+      };
+    }),
     ...cliffs.map((c) => ({
       type: "cliff",
       x: c.x,
@@ -1239,15 +1472,31 @@ function drawDebugDistances() {
     .filter((item) => item.x + item.w > -80 && item.x < canvas.width + 320)
     .sort((a, b) => a.x - b.x);
 
-  if (hazards.length === 0) {
-    return;
-  }
-
   ctx.save();
   ctx.font = "bold 13px Microsoft YaHei, Arial";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.lineWidth = 2;
+
+  const hb = playerHitbox();
+  ctx.setLineDash([5, 4]);
+  ctx.strokeStyle = "rgba(34, 197, 94, 0.95)";
+  ctx.strokeRect(hb.x, hb.y, hb.w, hb.h);
+  ctx.setLineDash([]);
+  const playerLabel = "玩家碰撞体积";
+  const playerLabelWidth = ctx.measureText(playerLabel).width;
+  const playerLabelX = hb.x + hb.w * 0.5;
+  const playerLabelY = Math.max(18, hb.y - 13);
+  ctx.fillStyle = "rgba(22, 101, 52, 0.86)";
+  roundRect(playerLabelX - playerLabelWidth / 2 - 6, playerLabelY - 10, playerLabelWidth + 12, 20, 5);
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.fillText(playerLabel, playerLabelX, playerLabelY);
+
+  if (hazards.length === 0) {
+    ctx.restore();
+    return;
+  }
 
   for (const item of hazards) {
     ctx.strokeStyle = item.type === "cliff" ? "rgba(249, 115, 22, 0.92)" : "rgba(239, 68, 68, 0.92)";
@@ -1329,6 +1578,7 @@ state.sparks.forEach(s => {
 
   drawPlayer();
   drawPets();
+  drawSandstormOverlay();
   drawSceneTransition();
   drawDebugDistances();
   drawPauseScreen();

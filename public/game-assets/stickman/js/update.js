@@ -59,10 +59,7 @@
     // 掉落失败：进入悬崖缺口后，脚部下探到地面以下即判定失败
     if (player.vy > 0 && player.y >= groundY + 8) {
       if (!tryUseReviveFan()) {
-        state.running = false;
-        playGameOverSound();
-        playLoseAudio();
-        stopBgm();
+        triggerGameOver();
       }
     }
   }
@@ -191,17 +188,16 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
       state.powerupInterval = 15000 + Math.random() * 9000;
     }
 
-    // 炮弹生成：把随机结果存在 state 中，避免每帧重抽导致节奏不可控。
-    state.cannonTimer += deltaMs;
-    const canFireUnder1000 = state.score <= 1000 && state.cannonCountUnder1000 < 2;
-    const canFireAfter1000 = state.score > 1000;
-    if ((canFireUnder1000 || canFireAfter1000) && state.cannonTimer >= state.cannonInterval && cannonballs.length < 1) {
-      state.cannonTimer = 0;
-      addCannonball();
-      if (canFireUnder1000) {
-        state.cannonCountUnder1000 += 1;
+    // 前 1000m 不加入导弹，避免开局同时学习跳跃/下铲/导弹。
+    if (state.distance > 1000) {
+      state.cannonTimer += deltaMs;
+      if (state.cannonTimer >= state.cannonInterval && cannonballs.length < 1) {
+        state.cannonTimer = 0;
+        addCannonball();
+        state.cannonInterval = getNextCannonInterval();
       }
-      state.cannonInterval = getNextCannonInterval();
+    } else {
+      state.cannonTimer = 0;
     }
   }
 
@@ -298,6 +294,24 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
       obstacles.splice(i, 1);
       continue;
     }
+    if (o.type === "sandstorm") {
+      const now = performance.now();
+      if (state.sandstormTriggeredThisDesert) {
+        continue;
+      }
+      const warningLead = Math.max(480, state.speed * 120);
+      if (!o.warned && o.x < canvas.width + warningLead) {
+        o.warned = true;
+        o.triggerAt = now + 2000;
+        state.sandstormWarningUntil = Math.max(state.sandstormWarningUntil, o.triggerAt);
+      }
+      if (!o.triggered && o.warned && now >= o.triggerAt) {
+        o.triggered = true;
+        state.sandstormTriggeredThisDesert = true;
+        state.sandstormUntil = Math.max(state.sandstormUntil, now + 8000);
+      }
+      continue;
+    }
     if (ljwDashing && o.type === "lowbar" && isObstacleColliding(o)) {
       obstacles.splice(i, 1);
       playShieldBreakSound();
@@ -310,10 +324,7 @@ for (let i = state.skidMarks.length - 1; i >= 0; i--) {
         obstacles.splice(i, 1);
       } else {
         if (!tryUseReviveFan()) {
-          state.running = false;
-          playGameOverSound();
-          playLoseAudio();
-          stopBgm();
+          triggerGameOver();
         }
       }
     }
@@ -358,10 +369,7 @@ if (c.warning) {
       cannonballs.splice(i, 1);
     } else {
       if (!tryUseReviveFan()) {
-        state.running = false;
-        playGameOverSound();
-        playLoseAudio();
-        stopBgm();
+        triggerGameOver();
       }
     }
   }
@@ -387,32 +395,78 @@ if (c.warning) {
 function playerHitbox() {
   if (player.slideBlend > 0.45) {
     return {
-      x: player.x - 22,
-      y: player.y - 38,
-      w: 46,
-      h: 38
+      x: player.x - 32,
+      y: player.y - 48,
+      w: 118,
+      h: 46
     };
   }
   const bodyTop = player.y - player.bodyHeight;
+  const headHalf = player.headSize * 0.5;
   return {
-    x: player.x - 18,
+    x: player.x - Math.max(18, headHalf),
     y: bodyTop - player.headSize,
-    w: 36,
+    w: Math.max(36, player.headSize),
     h: player.bodyHeight + player.headSize
   };
 }
 
 function isObstacleColliding(obstacle) {
+  const box = getObstacleCollisionBox(obstacle);
+  const isPassedByPlayer = (box) => box.x + box.w < player.x - 12;
+  if (isPassedByPlayer(box)) {
+    return false;
+  }
+  return isColliding(playerHitbox(), box);
+}
+
+function getObstacleCollisionBox(obstacle) {
+  if (obstacle.type === "lowbar") {
+    return getLowbarCollisionBox(obstacle);
+  }
   if (obstacle.type === "spike") {
-    const box = {
+    return {
       x: obstacle.x + 4,
       y: obstacle.y + 10,
       w: Math.max(8, obstacle.w - 8),
       h: Math.max(8, obstacle.h - 10)
     };
-    return isColliding(playerHitbox(), box);
   }
-  return isColliding(playerHitbox(), obstacle);
+  if (obstacle.type === "trafficGate") {
+    return {
+      x: obstacle.x + 7,
+      y: obstacle.y + 8,
+      w: Math.max(10, obstacle.w - 14),
+      h: Math.max(10, obstacle.h - 8)
+    };
+  }
+  if (obstacle.type === "lanternSwing") {
+    const swing = getLanternSwingOffset(obstacle);
+    return {
+      x: obstacle.x + obstacle.w * 0.5 + swing - 19,
+      y: groundY - 146,
+      w: 38,
+      h: 58
+    };
+  }
+  if (obstacle.type === "spikedMace") {
+    const swing = getLanternSwingOffset(obstacle);
+    return {
+      x: obstacle.x + obstacle.w * 0.5 + swing - 25,
+      y: groundY - 152,
+      w: 50,
+      h: 50
+    };
+  }
+  if (obstacle.type === "palaceGate") {
+    return {
+      x: obstacle.x + 12,
+      y: obstacle.y,
+      w: Math.max(12, obstacle.w - 24),
+      h: obstacle.h
+    };
+  }
+  return obstacle;
 }
 
 function updateSceneTransition(deltaMs, dt) {
@@ -532,6 +586,9 @@ function beginSceneApproach() {
 function completeSceneSwitch() {
   state.distance = Math.max(state.distance, state.nextSceneScore);
   state.sceneIndex = state.nextSceneIndex;
+  state.sandstormUntil = 0;
+  state.sandstormWarningUntil = 0;
+  state.sandstormTriggeredThisDesert = getCurrentSceneTheme().id !== "desert" ? state.sandstormTriggeredThisDesert : false;
   state.lastSceneSwitchScore = state.distance;
   state.nextSceneScore += sceneSwitchEveryScore;
   state.nextSceneIndex = pickNextSceneIndex(state.sceneIndex);

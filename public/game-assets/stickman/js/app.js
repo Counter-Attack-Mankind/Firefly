@@ -71,6 +71,8 @@ function updateSecretProgressBar() {
   const skillOrb = document.querySelector(".secret-progress-orb span");
   const mobileSkillButton = document.getElementById("mobileSkillButton");
   const skill = getCurrentCharacterConfig();
+  const wdUsesLeft = state.characterId === "wd" ? Math.max(0, wdSkillMaxUses - state.wdSkillUseCount) : null;
+  const wdLocked = state.characterId === "wd" && wdUsesLeft <= 0;
   const progress = state.inSecretRealm
     ? Math.min(100, Math.floor((state.secretDistance / secretRealmDistance) * 100))
     : hasLjwDash()
@@ -79,6 +81,8 @@ function updateSecretProgressBar() {
       ? 100
     : skill.skillType === "slideCharge"
       ? Math.min(100, Math.floor((state.secretCharge / skill.chargeMax) * 100))
+    : wdLocked
+      ? 0
     : Math.min(100, Math.floor((state.secretCharge / skill.chargeMax) * 100));
 
   if (progressFill) {
@@ -95,6 +99,10 @@ function updateSecretProgressBar() {
       ? `${Math.floor(state.secretDistance)} / ${secretRealmDistance}m`
       : hasLjwDash()
         ? `${Math.floor(state.ljwDashDistance)} / ${ljwDashDistance}m`
+      : wdLocked
+        ? `剩余 0 / ${wdSkillMaxUses}`
+      : state.characterId === "wd"
+        ? `${Math.floor(state.secretCharge)} / ${skill.chargeMax} | 剩余 ${wdUsesLeft} / ${wdSkillMaxUses}`
       : skill.skillType === "passive"
         ? "被动"
       : skill.skillType === "slideCharge"
@@ -106,6 +114,12 @@ function updateSecretProgressBar() {
       ? "秘境奔跑中"
       : hasLjwDash()
         ? "飞行冲刺中"
+      : wdLocked
+        ? "复活扇次数已用完"
+      : state.characterId === "wd" && state.secretReady
+        ? `${skill.readyText}（剩余 ${wdUsesLeft} 次）`
+      : state.characterId === "wd"
+        ? `${skill.chargingText}（剩余 ${wdUsesLeft} 次）`
       : skill.skillType === "passive"
         ? skill.chargingText
       : skill.skillType === "slideCharge"
@@ -119,12 +133,12 @@ function updateSecretProgressBar() {
         : skill.chargingText;
   }
   progressRoot?.classList.toggle("is-csy-charge", skill.skillType === "slideCharge");
-  progressRoot?.classList.toggle("is-ready", state.secretReady && !state.inSecretRealm);
+  progressRoot?.classList.toggle("is-ready", state.secretReady && !state.inSecretRealm && !wdLocked);
   progressRoot?.classList.toggle("is-active", state.inSecretRealm || hasLjwDash());
   if (mobileSkillButton) {
     mobileSkillButton.style.setProperty("--skill-progress", progress);
     mobileSkillButton.classList.toggle("is-csy-charge", skill.skillType === "slideCharge");
-    mobileSkillButton.classList.toggle("is-ready", state.secretReady && !state.inSecretRealm);
+    mobileSkillButton.classList.toggle("is-ready", state.secretReady && !state.inSecretRealm && !wdLocked);
     mobileSkillButton.classList.toggle("is-active", state.inSecretRealm || hasLjwDash());
   }
 }
@@ -180,6 +194,9 @@ function updateCharacterPreview() {
   }
   if (skillDescription) {
     skillDescription.textContent = character.skillDescription || character.readyText;
+  }
+  if (characterSelect) {
+    characterSelect.dataset.characterId = character.id;
   }
 }
 
@@ -262,7 +279,10 @@ function updateCharacterSelectState() {
   const locked = state.started && state.running;
   const characterSelect = document.getElementById("characterSelect");
   const entryActive = !document.getElementById("entryPrompt")?.classList.contains("is-hidden");
-  const visible = !locked && !entryActive;
+  const canChooseCharacter =
+    !state.started ||
+    (state.started && !state.running && state.scoreSubmitted && !state.settlementVisible);
+  const visible = !locked && !entryActive && !state.deathReviewActive && canChooseCharacter;
   characterSelect?.classList.toggle("is-active", visible);
   characterSelect?.setAttribute("aria-hidden", visible ? "false" : "true");
   document.querySelectorAll(".character-card").forEach((card) => {
@@ -304,13 +324,16 @@ function loop(timestamp) {
     update(deltaMs);
   }
   updateSecretProgressBar();
-  if (state.started && !state.running) {
+  if (state.started && !state.running && !state.deathReviewActive) {
     releaseGamePageLock();
   }
   if (typeof leaderboardTrackGameOver === "function") {
     leaderboardTrackGameOver();
   }
   draw();
+  if (typeof drawCharacterPreview === "function") {
+    drawCharacterPreview();
+  }
   updatePauseButton();
   updateMobileControlsButton();
   updateCharacterSelectState();
@@ -366,6 +389,14 @@ window.addEventListener("keydown", (e) => {
     }
     return;
   }
+  if (!state.running && state.deathReviewActive) {
+    e.preventDefault();
+    if (e.repeat) {
+      return;
+    }
+    dismissDeathReview();
+    return;
+  }
   if (e.key.toLowerCase() === "p") {
     e.preventDefault();
     togglePause();
@@ -416,6 +447,10 @@ window.addEventListener("message", (event) => {
 });
 
 canvas.addEventListener("pointerdown", () => {
+  if (state.started && !state.running && state.deathReviewActive) {
+    dismissDeathReview();
+    return;
+  }
   if (state.started && !state.running) {
     updateCharacterSelectState();
     return;
@@ -591,6 +626,3 @@ updateMobileControlsButton();
 updateSecretProgressBar();
 updateCharacterSelectState();
 requestAnimationFrame(loop);
-  if (characterSelect) {
-    characterSelect.dataset.characterId = character.id;
-  }

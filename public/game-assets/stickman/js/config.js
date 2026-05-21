@@ -24,6 +24,8 @@ const reviveSkillChargeMax = 400;  //wd技能金币数量
 const ljwDashSkillChargeMax = 300;  //ljw技能金币数量
 const doubleScoreDurationMs = 20000;
 const wdReviveInvincibleMs = 2000;
+const wdSkillMaxUses = 5;
+const wdSkillScoreMultipliers = [1, 0.8, 0.55, 0.32, 0.15, 0];
 const ljwLandingInvincibleMs = 1000;
 const ljwDashDistance = 200;
 const ljwDashSpeed = 15.8;
@@ -34,6 +36,11 @@ const secretRealmDistance = 100;
 const secretCoinSpacing = 62;
 const lowbarCliffMinDistance = 820;
 const lowbarJumpMinDistance = 520;
+const lowbarVisualWidth = 190;
+const lowbarGroundClearance = 74;
+const lowbarVisualHeight = groundY - lowbarGroundClearance;
+const lowbarCannonConflictEnterBufferFrames = 18;
+const lowbarCannonConflictExitBufferFrames = 42;
 const jumpObstacleMinDistance = 200;
 const collectibleCliffPadding = 42;
 const petCoinMagnetRadius = 190;
@@ -46,7 +53,7 @@ const coinPreloadBuffer = 24;
 const slideCoinSpacing = 46;
 const jumpCoinArcChance = 0.7;
 const betweenJumpCoinChance = 0.45;
-const sceneSwitchEveryScore = 1000;   //场景变换距离
+const sceneSwitchEveryScore = 500;   //场景变换距离
 const sceneTunnelLeadScore = 120;
 const sceneTunnelFadeScore = 95;
 const sceneTunnelX = canvas.width - 170;
@@ -61,7 +68,7 @@ const sceneApproachSpeed = 5.2;
 const sceneDarkenMs = 520;
 const sceneBrightenMs = 700;
 const playerRunX = canvas.width * 0.25;
-const sceneOrder = [1, 0, 2]; // 城市 -> 沙漠 -> 故宫
+const sceneOrder = [1, 2, 0]; // 城市1 -> 沙漠0 -> 故宫2
 const sceneThemes = [
   {
     id: "desert",
@@ -220,6 +227,8 @@ const characterConfigs = {
 };
 
 const headImage = new Image();
+const slideBodyImage = new Image();
+slideBodyImage.src = "audio/down.png";
 const cannonballs = [];
 const rpgImage = new Image();
 rpgImage.src = "character_move/RPG.png";
@@ -239,6 +248,64 @@ const ljwFlyImage = new Image();
 ljwFlyImage.src = "character/ljw/fly.png";
 const ljwDashPetImage = new Image();
 ljwDashPetImage.src = "character/ljw/pet.png";
+const lowbarImageSources = {
+  city: "character_move/ob1.png",
+  desert: "character_move/ob2.png",
+  maze: "character_move/ob3.png"
+};
+const lowbarImages = Object.fromEntries(
+  Object.entries(lowbarImageSources).map(([sceneId, src]) => {
+    const img = new Image();
+    img.src = src;
+    return [sceneId, img];
+  })
+);
+
+function getLowbarImageForObstacle(obstacle) {
+  return lowbarImages[obstacle.sceneId] || lowbarImages[getCurrentSceneTheme().id] || lowbarImages.city;
+}
+
+function getLowbarVisualRect(obstacle) {
+  const img = getLowbarImageForObstacle(obstacle);
+  if (!img || !img.naturalWidth || !img.naturalHeight) {
+    return {
+      x: obstacle.x,
+      y: obstacle.y,
+      w: obstacle.w,
+      h: obstacle.h
+    };
+  }
+
+  const imageRatio = img.naturalWidth / img.naturalHeight;
+  const targetBottom = groundY - lowbarGroundClearance;
+  const maxH = Math.max(24, Math.min(obstacle.h, targetBottom - obstacle.y));
+  let h = maxH;
+  let w = h * imageRatio;
+  const maxW = obstacle.w * 1.7;
+  if (w > maxW) {
+    w = maxW;
+    h = w / imageRatio;
+  }
+  return {
+    x: obstacle.x + (obstacle.w - w) * 0.5,
+    y: targetBottom - h,
+    w,
+    h
+  };
+}
+
+function getLowbarCollisionBox(obstacle) {
+  const rect = getLowbarVisualRect(obstacle);
+  return {
+    x: rect.x + rect.w * 0.08,
+    y: rect.y,
+    w: rect.w * 0.84,
+    h: Math.max(10, rect.h * 0.98)
+  };
+}
+function getLanternSwingOffset(obstacle) {
+  return Math.sin(performance.now() * 0.004 + (obstacle.phase || 0)) * (obstacle.swingRange || 48);
+}
 const cactusImage = new Image();
 cactusImage.src = "character_move/cactus.png";
 const roadblocksImage = new Image();

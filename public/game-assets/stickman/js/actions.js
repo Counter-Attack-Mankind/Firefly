@@ -26,6 +26,12 @@
   state.ljwLandingInvincibleUntil = 0;
   state.scoreSubmitted = false;
   state.lockReleasedForRun = false;
+  state.settlementVisible = false;
+  state.deathReviewActive = false;
+  state.deathReviewReadyAt = 0;
+  state.sandstormUntil = 0;
+  state.sandstormWarningUntil = 0;
+  state.sandstormTriggeredThisDesert = false;
   if (typeof leaderboardResetRun === "function") {
     leaderboardResetRun();
   }
@@ -81,12 +87,45 @@
   updateScore();
 }
 
+function triggerGameOver() {
+  if (!state.running) {
+    return;
+  }
+  state.running = false;
+  state.deathReviewActive = true;
+  state.deathReviewReadyAt = performance.now() + 650;
+  state.downPressed = false;
+  playGameOverSound();
+  playLoseAudio();
+  stopBgm();
+}
+
+function dismissDeathReview() {
+  if (!state.deathReviewActive) {
+    return false;
+  }
+  if (performance.now() < state.deathReviewReadyAt) {
+    return false;
+  }
+  state.deathReviewActive = false;
+  state.deathReviewReadyAt = 0;
+  return true;
+}
+
 function addSecretCharge(amount) {
   if (state.inSecretRealm) {
     return;
   }
   const skill = getCurrentCharacterConfig();
   if (skill.skillType === "passive" || skill.skillType === "slideCharge") {
+    return;
+  }
+  if (skill.skillType === "revive" && state.wdSkillUseCount >= wdSkillMaxUses) {
+    state.secretCharge = 0;
+    state.secretReady = false;
+    if (typeof updateSecretProgressBar === "function") {
+      updateSecretProgressBar();
+    }
     return;
   }
   state.secretCharge = Math.min(skill.chargeMax, state.secretCharge + amount);
@@ -181,8 +220,16 @@ function activateReviveFan() {
     state.paused ||
     !state.secretReady ||
     state.inSecretRealm ||
-    state.wdFanActive
+    state.wdFanActive ||
+    state.wdSkillUseCount >= wdSkillMaxUses
   ) {
+    if (state.wdSkillUseCount >= wdSkillMaxUses) {
+      state.secretReady = false;
+      state.secretCharge = 0;
+      if (typeof updateSecretProgressBar === "function") {
+        updateSecretProgressBar();
+      }
+    }
     return;
   }
 
