@@ -125,36 +125,45 @@ function drawFarMountains() {
 }
 
 function drawGround() {
-  const day = state.dayTime;
   const theme = getCurrentSceneTheme();
-  const groundColor = mixColor(theme.groundNight, theme.groundDay, day);
-  const strokeColor = mixColor(theme.groundStrokeNight, theme.groundStrokeDay, day);
 
   const topY = groundY + 1;
   const groundH = canvas.height - groundY;
+  const groundStyle = getSceneGroundStyle(theme.id);
 
   const visibleCliffs = cliffs
     .filter((c) => c.x + c.w > 0 && c.x < canvas.width)
     .slice()
     .sort((a, b) => a.x - b.x);
 
-  // 只在“有地面”的区域画地面；缺口保持天空，从而形成悬崖。
-  ctx.fillStyle = groundColor;
-  let cursor = 0;
-  for (const c of visibleCliffs) {
-    const gapStart = Math.max(0, c.x);
-    const gapEnd = Math.min(canvas.width, c.x + c.w);
-    if (gapEnd <= cursor) continue;
+  const drawSolidGroundSegments = (drawSegment) => {
+    let cursor = 0;
+    for (const c of visibleCliffs) {
+      const gapStart = Math.max(0, c.x);
+      const gapEnd = Math.min(canvas.width, c.x + c.w);
+      if (gapEnd <= cursor) continue;
 
-    if (gapStart > cursor) {
-      ctx.fillRect(cursor, topY, gapStart - cursor, groundH);
+      if (gapStart > cursor) {
+        drawSegment(cursor, gapStart - cursor);
+      }
+
+      cursor = Math.max(cursor, gapEnd);
     }
+    if (cursor < canvas.width) {
+      drawSegment(cursor, canvas.width - cursor);
+    }
+  };
 
-    cursor = Math.max(cursor, gapEnd);
-  }
-  if (cursor < canvas.width) {
-    ctx.fillRect(cursor, topY, canvas.width - cursor, groundH);
-  }
+  // 只在“有地面”的区域画地面；缺口保持天空，从而形成悬崖。
+  const groundGrad = ctx.createLinearGradient(0, topY, 0, canvas.height);
+  groundStyle.baseStops.forEach(([offset, color]) => groundGrad.addColorStop(offset, color));
+  ctx.fillStyle = groundGrad;
+  drawSolidGroundSegments((x, w) => ctx.fillRect(x, topY, w, groundH));
+
+  ctx.fillStyle = groundStyle.topLine;
+  drawSolidGroundSegments((x, w) => ctx.fillRect(x, topY, w, 4));
+  ctx.fillStyle = groundStyle.shadowLine;
+  drawSolidGroundSegments((x, w) => ctx.fillRect(x, topY + 4, w, 2));
 
   // 悬崖内绘制火焰（醒目提示危险区域）
   const flameTime = performance.now() * 0.01;
@@ -206,27 +215,105 @@ function drawGround() {
     }
   }
 
-  // 地面纹理只在实地上画
-  ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = 2;
-  const step = theme.id === "city" ? 44 : theme.id === "maze" ? 34 : 28;
-  for (let x = 0; x < canvas.width; x += step) {
-    const sampleX = x + 6;
-    if (!isSolidGroundAt(sampleX)) continue;
-    if (theme.id === "city") {
-      ctx.beginPath();
-      ctx.moveTo(x, groundY + 13);
-      ctx.lineTo(x + 24, groundY + 13);
-      ctx.stroke();
-    } else if (theme.id === "maze") {
-      ctx.strokeRect(x, groundY + 8, 22, 18);
-    } else {
-      ctx.beginPath();
-      ctx.moveTo(x, groundY + 1);
-      ctx.lineTo(x + 12, groundY + 11);
-      ctx.stroke();
-    }
+  // 地面纹理只在实地上画，保持低对比，避免奔跑时视觉疲劳。
+  if (theme.id === "city") {
+    drawSolidGroundSegments((x, w) => {
+      ctx.fillStyle = "rgba(15, 23, 42, 0.16)";
+      ctx.fillRect(x, groundY + 21, w, 2);
+      ctx.fillStyle = "rgba(226, 232, 240, 0.16)";
+      for (let px = Math.floor(x / 92) * 92; px < x + w; px += 92) {
+        const tileX = Math.max(x, px + 18);
+        const tileW = Math.min(48, x + w - tileX);
+        if (tileW > 8) ctx.fillRect(tileX, groundY + 38, tileW, 3);
+      }
+    });
+  } else if (theme.id === "desert") {
+    drawSolidGroundSegments((x, w) => {
+      ctx.strokeStyle = "rgba(96, 60, 28, 0.18)";
+      ctx.lineWidth = 2;
+      for (let y = groundY + 16; y < canvas.height; y += 18) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(x + w * 0.5, y + Math.sin((x + y) * 0.01) * 4, x + w, y);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "rgba(255, 241, 190, 0.1)";
+      ctx.fillRect(x, groundY + 8, w, 6);
+    });
+  } else if (theme.id === "maze") {
+    drawSolidGroundSegments((x, w) => {
+      ctx.strokeStyle = "rgba(253, 224, 171, 0.18)";
+      ctx.lineWidth = 2;
+      for (let y = groundY + 14; y < canvas.height; y += 24) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + w, y);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = "rgba(69, 26, 3, 0.18)";
+      for (let px = Math.floor(x / 96) * 96; px < x + w; px += 96) {
+        const jointX = px + 46;
+        if (jointX > x && jointX < x + w) {
+          ctx.beginPath();
+          ctx.moveTo(jointX, groundY + 14);
+          ctx.lineTo(jointX, canvas.height - 6);
+          ctx.stroke();
+        }
+      }
+    });
+  } else {
+    drawSolidGroundSegments((x, w) => {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
+      ctx.fillRect(x, groundY + 12, w, 3);
+      ctx.fillStyle = "rgba(76, 29, 149, 0.18)";
+      ctx.fillRect(x, groundY + 34, w, 2);
+    });
   }
+}
+
+function getSceneGroundStyle(sceneId) {
+  if (sceneId === "city") {
+    return {
+      baseStops: [
+        [0, "#4b5563"],
+        [0.42, "#374151"],
+        [1, "#242a33"]
+      ],
+      topLine: "rgba(203, 213, 225, 0.38)",
+      shadowLine: "rgba(15, 23, 42, 0.36)"
+    };
+  }
+  if (sceneId === "desert") {
+    return {
+      baseStops: [
+        [0, "#c8944e"],
+        [0.5, "#a87335"],
+        [1, "#765028"]
+      ],
+      topLine: "rgba(255, 226, 151, 0.52)",
+      shadowLine: "rgba(92, 55, 25, 0.24)"
+    };
+  }
+  if (sceneId === "maze") {
+    return {
+      baseStops: [
+        [0, "#806349"],
+        [0.48, "#624736"],
+        [1, "#3f2d28"]
+      ],
+      topLine: "rgba(253, 224, 171, 0.44)",
+      shadowLine: "rgba(69, 26, 3, 0.28)"
+    };
+  }
+  return {
+    baseStops: [
+      [0, "#8b6cc8"],
+      [0.55, "#6651a4"],
+      [1, "#3c3270"]
+    ],
+    topLine: "rgba(233, 213, 255, 0.46)",
+    shadowLine: "rgba(49, 46, 129, 0.24)"
+  };
 }
 
 function drawCitySkyline() {
@@ -892,9 +979,9 @@ function drawSandstormOverlay() {
   ctx.save();
   if (stormActive) {
     const hb = playerHitbox();
-    const cx = hb.x + hb.w * 0.5 + 50;
+    const cx = hb.x + hb.w * 0.5 + 150;
     const cy = hb.y + hb.h * 0.48;
-    const mask = ctx.createRadialGradient(cx, cy, 250, cx, cy, 275);
+    const mask = ctx.createRadialGradient(cx, cy, 100, cx, cy, 600);
     mask.addColorStop(0, "rgba(0, 0, 0, 0)");
     mask.addColorStop(1, "rgba(0, 0, 0, 1)");
     ctx.fillStyle = mask;
@@ -1163,27 +1250,57 @@ function drawMagnetField() {
   const cx = hb.x + hb.w * 0.5;
   const cy = hb.y + hb.h * 0.45;
   const now = performance.now();
-  const spin = now * 0.004;
-  const radius = hasLjwDash() ? 64 : 50;
+  const boosted = hasLjwDash();
+  const fieldRadius = boosted ? ljwDashMagnetRadius : petCoinMagnetRadius;
+  const visualRadius = boosted ? 118 : 86;
   ctx.save();
   ctx.globalCompositeOperation = "screen";
-  ctx.strokeStyle = "rgba(125, 211, 252, 0.66)";
-  ctx.lineWidth = 3;
   ctx.lineCap = "round";
-  ctx.shadowColor = "rgba(56, 189, 248, 0.48)";
-  ctx.shadowBlur = 10;
-  for (let i = 0; i < 3; i += 1) {
-    const angle = spin + (i * Math.PI * 2) / 3;
-    const orbX = cx + Math.cos(angle) * radius;
-    const orbY = cy + Math.sin(angle) * radius * 0.62;
+
+  for (const coin of coins) {
+    const dx = cx - coin.x;
+    const dy = cy - coin.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > fieldRadius || dist < 8) continue;
+    const alpha = Math.max(0, 1 - dist / fieldRadius) * (boosted ? 0.46 : 0.34);
+    ctx.strokeStyle = `rgba(125, 211, 252, ${alpha})`;
+    ctx.lineWidth = boosted ? 2.2 : 1.6;
     ctx.beginPath();
-    ctx.arc(orbX, orbY, 4, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(angle) * 18, cy + Math.sin(angle) * 12);
-    ctx.lineTo(orbX - Math.cos(angle) * 8, orbY - Math.sin(angle) * 5);
+    ctx.moveTo(coin.x, coin.y);
+    ctx.quadraticCurveTo(
+      (coin.x + cx) * 0.5,
+      (coin.y + cy) * 0.5 - 18 * Math.sin(now * 0.008 + coin.x * 0.03),
+      cx,
+      cy
+    );
     ctx.stroke();
   }
+
+  ctx.shadowColor = "rgba(56, 189, 248, 0.52)";
+  ctx.shadowBlur = boosted ? 18 : 12;
+  for (let i = 0; i < 4; i += 1) {
+    const t = ((now * 0.0017 + i * 0.25) % 1);
+    const radius = visualRadius * (0.48 + t * 0.62);
+    const alpha = (1 - t) * (boosted ? 0.54 : 0.42);
+    const wobble = Math.sin(now * 0.006 + i) * 0.12;
+    ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
+    ctx.lineWidth = 2.6 - t * 1.2;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, radius, radius * (0.66 + wobble), 0, Math.PI * 1.12, Math.PI * 1.88);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, radius, radius * (0.66 - wobble), 0, Math.PI * -0.88, Math.PI * -0.12);
+    ctx.stroke();
+  }
+
+  const corePulse = 0.5 + Math.sin(now * 0.009) * 0.5;
+  const glow = ctx.createRadialGradient(cx, cy, 6, cx, cy, boosted ? 62 : 48);
+  glow.addColorStop(0, `rgba(186, 230, 253, ${0.18 + corePulse * 0.12})`);
+  glow.addColorStop(1, "rgba(56, 189, 248, 0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, boosted ? 62 : 48, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }
 
@@ -1451,16 +1568,18 @@ function drawDebugDistances() {
   }
 
   const hazards = [
-    ...obstacles.map((o) => {
-      const box = typeof getObstacleCollisionBox === "function" ? getObstacleCollisionBox(o) : o;
-      return {
-        type: o.type,
-        x: box.x,
-        y: box.y,
-        w: box.w,
-        h: box.h
-      };
-    }),
+    ...obstacles
+      .filter((o) => o.type !== "sandstorm")
+      .map((o) => {
+        const box = typeof getObstacleCollisionBox === "function" ? getObstacleCollisionBox(o) : o;
+        return {
+          type: o.type,
+          x: box.x,
+          y: box.y,
+          w: box.w,
+          h: box.h
+        };
+      }),
     ...cliffs.map((c) => ({
       type: "cliff",
       x: c.x,
@@ -1585,4 +1704,3 @@ state.sparks.forEach(s => {
   drawStartScreen();
   drawGameOver();
 }
-

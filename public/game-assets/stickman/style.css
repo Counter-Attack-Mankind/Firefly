@@ -1087,8 +1087,8 @@ body.parent-fullscreen-mode .mobile-controls {
 
 .mobile-action {
   position: absolute;
-  width: clamp(122px, calc(5.85vw + 80px), 137px);
-  height: clamp(122px, calc(5.85vw + 80px), 137px);
+  width: clamp(102px, calc(5.85vw + 60px), 117px);
+  height: clamp(102px, calc(5.85vw + 60px), 117px);
   display: grid;
   place-items: center;
   border: 2px solid rgba(255, 255, 255, 0.48);
@@ -1128,15 +1128,15 @@ body.parent-fullscreen-mode .mobile-controls {
 }
 
 .mobile-action-slide {
-  left: clamp(52px, 8vw, 96px);
-  bottom: clamp(24px, 8vw, 72px);
+  left: clamp(52px, 5vw, 96px);
+  bottom: clamp(0px, calc(8vw - 70px), 42px);
 }
 
 .mobile-action-jump {
   right: clamp(22px, 5vw, 58px);
-  bottom: clamp(24px, 8vw, 72px);
-  width: clamp(130px, calc(6.9vw + 80px), 148px);
-  height: clamp(130px, calc(6.9vw + 80px), 148px);
+  bottom: clamp(0px, calc(8vw - 70px), 42px);
+  width: clamp(110px, calc(6.9vw + 60px), 128px);
+  height: clamp(110px, calc(6.9vw + 60px), 128px);
 }
 
 .mobile-action-skill {

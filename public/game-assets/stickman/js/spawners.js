@@ -25,6 +25,7 @@ function addObstacle() {
       if (isNearTunnelRange(x, x + w)) continue;
       if (hasCliffNearRange(x, x + w, getSafeDistance())) continue;
       if (hasJumpObstacleNearRange(x, x + w, lowbarJumpMinDistance)) continue;
+      if (hasLowCannonballThreatNearRange(x, x + w, 900)) continue;
       addPlannedObstacle({ type: "lowbar", sceneId: theme.id, x, y, w, h });
       return;
     }
@@ -100,6 +101,10 @@ function addSceneSpecialObstacle(spawnX) {
   }
 
   if (!obstacle) {
+    return false;
+  }
+
+  if (isSlideRequiredObstacle(obstacle) && hasLowCannonballThreatNearRange(obstacle.x, obstacle.x + obstacle.w, 900)) {
     return false;
   }
 
@@ -197,10 +202,16 @@ function hasLowbarCannonTimingConflict(spawnX, cannonSpeed) {
   const missileArrivalFrames = 60 + Math.max(0, spawnX - player.x) / Math.max(1, cannonSpeed);
 
   for (const obstacle of obstacles) {
-    if (obstacle.type !== "lowbar") continue;
+    if (!isSlideRequiredObstacle(obstacle)) continue;
 
-    const lowbarStartFrames = (obstacle.x - (player.x + 44)) / obstacleSpeed;
-    const lowbarEndFrames = (obstacle.x + obstacle.w - (player.x - 58)) / obstacleSpeed;
+    if (obstacle.x < canvas.width + 520 && obstacle.x + obstacle.w > player.x - 160) {
+      return true;
+    }
+
+    const slideFrontX = player.x + 98;
+    const slideBackX = player.x - 44;
+    const lowbarStartFrames = (obstacle.x - slideFrontX) / obstacleSpeed;
+    const lowbarEndFrames = (obstacle.x + obstacle.w - slideBackX) / obstacleSpeed;
     if (
       missileArrivalFrames >= lowbarStartFrames - lowbarCannonConflictEnterBufferFrames &&
       missileArrivalFrames <= lowbarEndFrames + lowbarCannonConflictExitBufferFrames
@@ -209,7 +220,39 @@ function hasLowbarCannonTimingConflict(spawnX, cannonSpeed) {
     }
   }
 
-  return hasLowbarNearX(spawnX, 260);
+  return hasSlideRequiredObstacleNearX(spawnX, 420);
+}
+
+function isSlideRequiredObstacle(obstacle) {
+  return (
+    obstacle.type === "lowbar" ||
+    obstacle.type === "palaceGate" ||
+    obstacle.type === "spikedMace" ||
+    obstacle.type === "lanternSwing"
+  );
+}
+
+function hasSlideRequiredObstacleNearX(x, padding = 1000) {
+  for (const obstacle of obstacles) {
+    if (!isSlideRequiredObstacle(obstacle)) continue;
+    if (x + padding > obstacle.x && x - padding < obstacle.x + obstacle.w) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function hasLowCannonballThreatNearRange(startX, endX, padding = 680) {
+  for (const cannonball of cannonballs) {
+    if (cannonball.y < groundY - 60) continue;
+    const halfW = (cannonball.hitW || cannonball.r * 2) / 2;
+    const left = cannonball.x - halfW;
+    const right = cannonball.x + halfW;
+    if (endX + padding > left && startX - padding < right) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function addCliff() {
