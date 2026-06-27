@@ -1,0 +1,182 @@
+---
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import { url } from "@/utils/url-utils";
+---
+
+<MainGridLayout title="大鱼吃小鱼" description="使用 WSAD 控制鱼游动、吃鱼得分并逐步解锁新鱼类的 2D 小游戏">
+  <div id="big-fish-page" class="big-fish-page">
+    <div class="big-fish-toolbar">
+      <div>
+        <p>Big Fish</p>
+        <h2>大鱼吃小鱼</h2>
+      </div>
+      <button id="big-fish-fullscreen" type="button">全屏</button>
+    </div>
+
+    <iframe
+      id="big-fish-frame"
+      title="大鱼吃小鱼"
+      src={url("/game-assets/big-fish/index.html")}
+      tabindex="0"
+      loading="eager"
+      allow="fullscreen"
+      allowfullscreen
+    />
+  </div>
+</MainGridLayout>
+
+<script>
+  const frame = document.getElementById("big-fish-frame") as HTMLIFrameElement | null;
+  const page = document.getElementById("big-fish-page");
+  const fullscreenButton = document.getElementById("big-fish-fullscreen");
+  const gameKeys = new Set(["KeyW", "KeyA", "KeyS", "KeyD"]);
+
+  document.documentElement.classList.add("big-fish-layout");
+  document.body.classList.add("big-fish-layout");
+
+  function setFullscreenUi(active: boolean) {
+    page?.classList.toggle("is-fullscreen", active);
+    if (fullscreenButton) {
+      fullscreenButton.textContent = active ? "退出" : "全屏";
+    }
+    frame?.focus();
+    frame?.contentWindow?.focus();
+  }
+
+  fullscreenButton?.addEventListener("click", async () => {
+    if (!page) return;
+    if (document.fullscreenElement === page) {
+      await document.exitFullscreen();
+      return;
+    }
+    await page.requestFullscreen();
+  });
+
+  document.addEventListener("fullscreenchange", () => {
+    setFullscreenUi(document.fullscreenElement === page);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!gameKeys.has(event.code)) return;
+    event.preventDefault();
+    frame?.focus();
+    frame?.contentWindow?.focus();
+  });
+
+  frame?.addEventListener("load", () => {
+    frame.focus();
+    frame.contentWindow?.focus();
+  });
+
+  document.addEventListener("astro:before-swap", () => {
+    document.documentElement.classList.remove("big-fish-layout");
+    document.body.classList.remove("big-fish-layout");
+  });
+</script>
+
+<style>
+  html.big-fish-layout #main-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  html.big-fish-layout #left-sidebar-wrapper,
+  html.big-fish-layout #left-sidebar-dynamic,
+  html.big-fish-layout #right-sidebar-static,
+  html.big-fish-layout #right-sidebar-dynamic,
+  html.big-fish-layout #mobile-bottom-sidebar,
+  html.big-fish-layout #category-bar-wrapper {
+    display: none;
+  }
+
+  html.big-fish-layout #swup-container,
+  html.big-fish-layout #content-wrapper {
+    max-width: none;
+    width: 100%;
+  }
+
+  .big-fish-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(1280px, calc(100vw - 32px));
+    min-height: calc(100vh - 112px);
+    margin: 0 auto;
+  }
+
+  .big-fish-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 64px;
+    padding: 12px 14px;
+    border: 1px solid var(--line-divider);
+    border-radius: 8px;
+    background: var(--card-bg);
+  }
+
+  .big-fish-toolbar p {
+    margin: 0 0 2px;
+    color: var(--text-50);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .big-fish-toolbar h2 {
+    margin: 0;
+    color: var(--primary);
+    font-size: 1.35rem;
+    line-height: 1.15;
+  }
+
+  #big-fish-fullscreen {
+    min-width: 72px;
+    height: 38px;
+    border: 1px solid var(--line-divider);
+    border-radius: 8px;
+    background: var(--btn-regular-bg);
+    color: var(--btn-content);
+    font-weight: 700;
+  }
+
+  #big-fish-frame {
+    display: block;
+    width: 100%;
+    flex: 1;
+    min-height: 640px;
+    border: 0;
+    border-radius: 8px;
+    background: #0b5d75;
+  }
+
+  .big-fish-page:fullscreen,
+  .big-fish-page.is-fullscreen {
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    padding: 10px;
+    background: #052e3c;
+  }
+
+  .big-fish-page:fullscreen #big-fish-frame,
+  .big-fish-page.is-fullscreen #big-fish-frame {
+    min-height: 0;
+  }
+
+  @media (max-width: 860px) {
+    .big-fish-page {
+      width: calc(100vw - 20px);
+      min-height: calc(100vh - 88px);
+    }
+
+    .big-fish-toolbar {
+      min-height: 58px;
+    }
+
+    #big-fish-frame {
+      min-height: 760px;
+    }
+  }
+</style>

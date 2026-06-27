@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>像素吃豆人</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="arcade-shell">
+      <section class="game-cabinet" aria-label="像素吃豆人">
+        <div class="marquee">
+          <div class="brand">
+            <span>PIXEL PAC</span>
+            <strong id="levelText">LEVEL 1</strong>
+          </div>
+          <div class="hud-strip" aria-label="游戏状态">
+            <div><span>分数</span><strong id="scoreText">0</strong></div>
+            <div><span>最高</span><strong id="bestText">0</strong></div>
+            <div><span>生命</span><strong id="lifeText">3</strong></div>
+            <div><span>金币</span><strong id="dotText">0</strong></div>
+          </div>
+        </div>
+
+        <canvas id="gameCanvas" width="672" height="552"></canvas>
+
+        <div id="startOverlay" class="overlay is-active">
+          <div class="overlay-panel">
+            <p>Insert Coin</p>
+            <h1>像素吃豆人</h1>
+            <div class="mode-actions">
+              <button id="storyButton" type="button">闯关模式</button>
+              <button id="endlessButton" type="button">无尽模式</button>
+              <button id="tutorialButton" type="button">进入教学</button>
+              <button id="skipTutorialButton" type="button">跳过教学</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="tutorialOverlay" class="overlay">
+          <div class="overlay-panel tutorial-panel">
+            <p>How To Play</p>
+            <h1>教学</h1>
+            <ul>
+              <li>按住 W/A/S/D 可以连续移动，松开就会在下一个格点停住。</li>
+              <li>转向时按新的方向，角色会在能转弯的格点自动转过去。</li>
+              <li>闯关模式需要吃完金币，再进入右上角的门。</li>
+              <li>大金币是驱散道具，吃下后碰到幽灵会把它送回重生点。</li>
+              <li>无尽模式每获得 1000 分会新增 1 个幽灵。</li>
+            </ul>
+            <div class="mode-actions">
+              <button id="tutorialStoryButton" type="button">开始闯关</button>
+              <button id="tutorialEndlessButton" type="button">开始无尽</button>
+              <button id="tutorialBackButton" type="button">返回</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="endOverlay" class="overlay">
+          <div class="overlay-panel">
+            <p id="endKicker">Game Over</p>
+            <h1 id="endScore">0</h1>
+            <button id="restartButton" type="button">再玩一次</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="./game.js"></script>
+  </body>
+</html>

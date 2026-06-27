@@ -44,8 +44,25 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 	links.push({
 		name: "小游戏",
-		url: "/games/stickman/",
+		url: "/games/",
 		icon: "material-symbols:sports-esports",
+		children: [
+			{
+				name: "火柴人跑酷",
+				url: "/games/stickman/",
+				icon: "material-symbols:directions-run",
+			},
+			{
+				name: "大鱼吃小鱼",
+				url: "/games/big-fish/",
+				icon: "material-symbols:set-meal",
+			},
+			{
+				name: "像素吃豆人",
+				url: "/games/pixel-pacman/",
+				icon: "material-symbols:stadia-controller",
+			},
+		],
 	});
 
 	// 关于及其子菜单

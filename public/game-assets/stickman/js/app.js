@@ -440,8 +440,11 @@ window.addEventListener("message", (event) => {
     return;
   }
   const active = Boolean(event.data.active);
+  const mode = event.data.mode || "mobile";
   document.body.classList.toggle("parent-fullscreen-mode", active);
-  if (active) {
+  document.body.classList.toggle("parent-desktop-fullscreen-mode", active && mode === "desktop");
+  document.body.classList.toggle("parent-mobile-fullscreen-mode", active && mode === "mobile");
+  if (active && mode === "mobile") {
     setMobileControlsEnabled(true);
   }
 });
@@ -482,6 +485,12 @@ document.getElementById("mobileControlsButton")?.addEventListener("pointerdown",
 document.getElementById("entryFullscreenButton")?.addEventListener("click", (event) => {
   event.preventDefault();
   window.parent?.postMessage({ type: "stickman:request-fullscreen" }, window.location.origin);
+  enterCharacterSelectPage();
+});
+
+document.getElementById("entryDesktopFullscreenButton")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  window.parent?.postMessage({ type: "stickman:request-desktop-fullscreen" }, window.location.origin);
   enterCharacterSelectPage();
 });
 

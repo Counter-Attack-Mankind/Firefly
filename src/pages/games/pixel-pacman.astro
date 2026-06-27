@@ -1,0 +1,207 @@
+---
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import { url } from "@/utils/url-utils";
+---
+
+<MainGridLayout title="像素吃豆人" description="使用 WSAD 控制角色吃豆、躲避幽灵并通关的像素街机小游戏">
+  <div id="pixel-pac-page" class="pixel-pac-page">
+    <div class="pixel-pac-toolbar">
+      <div>
+        <p>Pixel Pac</p>
+        <h2>像素吃豆人</h2>
+      </div>
+      <button id="pixel-pac-fullscreen" type="button">全屏</button>
+    </div>
+
+    <iframe
+      id="pixel-pac-frame"
+      title="像素吃豆人"
+      src={url("/game-assets/pixel-pacman/index.html")}
+      tabindex="0"
+      loading="eager"
+      allow="fullscreen"
+      allowfullscreen
+    />
+  </div>
+</MainGridLayout>
+
+<script>
+  const frame = document.getElementById("pixel-pac-frame") as HTMLIFrameElement | null;
+  const page = document.getElementById("pixel-pac-page");
+  const fullscreenButton = document.getElementById("pixel-pac-fullscreen");
+  const gameKeys = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"]);
+
+  document.documentElement.classList.add("pixel-pac-layout");
+  document.body.classList.add("pixel-pac-layout");
+
+  function setFullscreenUi(active: boolean) {
+    page?.classList.toggle("is-fullscreen", active);
+    if (fullscreenButton) fullscreenButton.textContent = active ? "退出" : "全屏";
+    frame?.focus();
+    frame?.contentWindow?.focus();
+  }
+
+  fullscreenButton?.addEventListener("click", async () => {
+    if (!page) return;
+    if (document.fullscreenElement === page) {
+      await document.exitFullscreen();
+      return;
+    }
+    await page.requestFullscreen();
+  });
+
+  document.addEventListener("fullscreenchange", () => {
+    setFullscreenUi(document.fullscreenElement === page);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!gameKeys.has(event.code)) return;
+    event.preventDefault();
+    frame?.focus();
+    frame?.contentWindow?.focus();
+    frame?.contentWindow?.postMessage(
+      { type: "pixel-pacman:keydown", code: event.code },
+      window.location.origin
+    );
+  });
+
+  document.addEventListener("keyup", (event) => {
+    if (!gameKeys.has(event.code)) return;
+    event.preventDefault();
+    frame?.contentWindow?.postMessage(
+      { type: "pixel-pacman:keyup", code: event.code },
+      window.location.origin
+    );
+  });
+
+  frame?.addEventListener("load", () => {
+    frame.focus();
+    frame.contentWindow?.focus();
+  });
+
+  document.addEventListener("astro:before-swap", () => {
+    document.documentElement.classList.remove("pixel-pac-layout");
+    document.body.classList.remove("pixel-pac-layout");
+  });
+</script>
+
+<style is:global>
+  html.pixel-pac-layout #main-grid {
+    display: block;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: none;
+  }
+
+  #main-grid:has(#pixel-pac-page) {
+    display: block;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: none;
+  }
+
+  html.pixel-pac-layout #left-sidebar-wrapper,
+  html.pixel-pac-layout #left-sidebar-dynamic,
+  html.pixel-pac-layout #right-sidebar-static,
+  html.pixel-pac-layout #right-sidebar-dynamic,
+  html.pixel-pac-layout #mobile-bottom-sidebar,
+  html.pixel-pac-layout #category-bar-wrapper,
+  #main-grid:has(#pixel-pac-page) #left-sidebar-wrapper,
+  #main-grid:has(#pixel-pac-page) #left-sidebar-dynamic,
+  #main-grid:has(#pixel-pac-page) #right-sidebar-static,
+  #main-grid:has(#pixel-pac-page) #right-sidebar-dynamic,
+  #main-grid:has(#pixel-pac-page) #mobile-bottom-sidebar,
+  #main-grid:has(#pixel-pac-page) #category-bar-wrapper {
+    display: none;
+  }
+
+  html.pixel-pac-layout #swup-container,
+  html.pixel-pac-layout #content-wrapper,
+  #main-grid:has(#pixel-pac-page) #swup-container,
+  #main-grid:has(#pixel-pac-page) #content-wrapper {
+    max-width: none;
+    width: 100%;
+  }
+
+  .pixel-pac-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(1220px, calc(100vw - 20px));
+    min-height: calc(100vh - 112px);
+    margin: 0 auto;
+  }
+
+  .pixel-pac-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 64px;
+    padding: 12px 14px;
+    border: 1px solid var(--line-divider);
+    border-radius: 8px;
+    background: var(--card-bg);
+  }
+
+  .pixel-pac-toolbar p {
+    margin: 0 0 2px;
+    color: var(--text-50);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .pixel-pac-toolbar h2 {
+    margin: 0;
+    color: var(--primary);
+    font-size: 1.35rem;
+    line-height: 1.15;
+  }
+
+  #pixel-pac-fullscreen {
+    min-width: 72px;
+    height: 38px;
+    border: 1px solid var(--line-divider);
+    border-radius: 8px;
+    background: var(--btn-regular-bg);
+    color: var(--btn-content);
+    font-weight: 700;
+  }
+
+  #pixel-pac-frame {
+    display: block;
+    width: 100%;
+    flex: 1;
+    min-height: 760px;
+    border: 0;
+    border-radius: 8px;
+    background: #09091c;
+  }
+
+  .pixel-pac-page:fullscreen,
+  .pixel-pac-page.is-fullscreen {
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    padding: 10px;
+    background: #060714;
+  }
+
+  .pixel-pac-page:fullscreen #pixel-pac-frame,
+  .pixel-pac-page.is-fullscreen #pixel-pac-frame {
+    min-height: 0;
+  }
+
+  @media (max-width: 880px) {
+    .pixel-pac-page {
+      width: calc(100vw - 20px);
+      min-height: calc(100vh - 88px);
+    }
+
+    #pixel-pac-frame {
+      min-height: 980px;
+    }
+  }
+</style>

@@ -1,5 +1,5 @@
 ---
-title: 火柴人跑酷继续进化
+title: 火柴人跑酷新增角色
 published: 2026-05-20
 description: 记录今天对火柴人跑酷小游戏的继续打磨：结算页面、角色系统、技能代价、磁铁表现、BGM 和移动端操作体验。
 pinned: false

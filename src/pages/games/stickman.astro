@@ -14,9 +14,14 @@ import { url } from "@/utils/url-utils";
           <p class="stickman-kicker">Stickman Runner</p>
           <h2>火柴人 2D 跑酷</h2>
         </div>
-        <button id="stickman-fullscreen-button" type="button">
-          全屏
-        </button>
+        <div class="stickman-fullscreen-actions">
+          <button id="stickman-desktop-fullscreen-button" type="button">
+            电脑全屏
+          </button>
+          <button id="stickman-mobile-fullscreen-button" type="button">
+            手机全屏
+          </button>
+        </div>
       </div>
       <iframe
         id="stickman-game-frame"
@@ -55,7 +60,8 @@ import { url } from "@/utils/url-utils";
 <script>
   const frame = document.getElementById("stickman-game-frame") as HTMLIFrameElement | null;
   const shell = document.getElementById("stickman-game-shell");
-  const fullscreenButton = document.getElementById("stickman-fullscreen-button");
+  const desktopFullscreenButton = document.getElementById("stickman-desktop-fullscreen-button");
+  const mobileFullscreenButton = document.getElementById("stickman-mobile-fullscreen-button");
   const playerNameInput = document.getElementById("stickman-player-name") as HTMLInputElement | null;
   const leaderboardList = document.getElementById("stickman-leaderboard-list");
   const leaderboardStatus = document.getElementById("stickman-leaderboard-status");
@@ -63,6 +69,7 @@ import { url } from "@/utils/url-utils";
   const leaderboardNameKey = "stickman_runner_player_name_v1";
   const gameKeys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "KeyW", "KeyS"]);
   let fallbackFullscreenActive = false;
+  let fullscreenMode: "desktop" | "mobile" | null = null;
 
   document.documentElement.classList.add("stickman-layout");
   document.body.classList.add("stickman-layout");
@@ -127,16 +134,22 @@ import { url } from "@/utils/url-utils";
     document.body.classList.toggle("stickman-page-lock", locked);
   }
 
-  function setFullscreenUi(active: boolean) {
+  function setFullscreenUi(active: boolean, mode: "desktop" | "mobile" | null = fullscreenMode) {
     fallbackFullscreenActive = active && document.fullscreenElement !== shell;
     shell?.classList.toggle("is-game-fullscreen", active);
+    shell?.classList.toggle("is-desktop-fullscreen", active && mode === "desktop");
+    shell?.classList.toggle("is-mobile-fullscreen", active && mode === "mobile");
     document.documentElement.classList.toggle("stickman-fallback-fullscreen", fallbackFullscreenActive);
     document.body.classList.toggle("stickman-fallback-fullscreen", fallbackFullscreenActive);
-    if (fullscreenButton) {
-      fullscreenButton.textContent = active ? "退出全屏" : "全屏";
+    if (desktopFullscreenButton) {
+      desktopFullscreenButton.textContent = active && mode === "desktop" ? "退出全屏" : "电脑全屏";
     }
+    if (mobileFullscreenButton) {
+      mobileFullscreenButton.textContent = active && mode === "mobile" ? "退出全屏" : "手机全屏";
+    }
+    fullscreenMode = active ? mode : null;
     frame?.contentWindow?.postMessage(
-      { type: "stickman:parent-fullscreen", active },
+      { type: "stickman:parent-fullscreen", active, mode },
       window.location.origin
     );
   }
@@ -157,7 +170,7 @@ import { url } from "@/utils/url-utils";
     }
   }
 
-  async function enterGameFullscreen() {
+  async function enterGameFullscreen(mode: "desktop" | "mobile" = "mobile") {
     try {
       if (shell?.requestFullscreen) {
         await shell.requestFullscreen();
@@ -167,8 +180,10 @@ import { url } from "@/utils/url-utils";
     } catch (_error) {
       fallbackFullscreenActive = true;
     }
-    await setFullscreenOrientation(true);
-    setFullscreenUi(true);
+    if (mode === "mobile") {
+      await setFullscreenOrientation(true);
+    }
+    setFullscreenUi(true, mode);
     frame?.focus();
     frame?.contentWindow?.focus();
   }
@@ -182,7 +197,7 @@ import { url } from "@/utils/url-utils";
       // CSS fallback still exits below.
     }
     await setFullscreenOrientation(false);
-    setFullscreenUi(false);
+    setFullscreenUi(false, null);
   }
 
   frame?.addEventListener("load", () => {
@@ -197,15 +212,26 @@ import { url } from "@/utils/url-utils";
     });
   }
 
-  fullscreenButton?.addEventListener("click", async () => {
+  desktopFullscreenButton?.addEventListener("click", async () => {
     if (!shell) {
       return;
     }
-    if (document.fullscreenElement === shell || fallbackFullscreenActive) {
+    if ((document.fullscreenElement === shell || fallbackFullscreenActive) && fullscreenMode === "desktop") {
       await exitGameFullscreen();
       return;
     }
-    await enterGameFullscreen();
+    await enterGameFullscreen("desktop");
+  });
+
+  mobileFullscreenButton?.addEventListener("click", async () => {
+    if (!shell) {
+      return;
+    }
+    if ((document.fullscreenElement === shell || fallbackFullscreenActive) && fullscreenMode === "mobile") {
+      await exitGameFullscreen();
+      return;
+    }
+    await enterGameFullscreen("mobile");
   });
 
   document.addEventListener("fullscreenchange", () => {
@@ -213,8 +239,9 @@ import { url } from "@/utils/url-utils";
     if (!active) {
       void setFullscreenOrientation(false);
       fallbackFullscreenActive = false;
+      fullscreenMode = null;
     }
-    setFullscreenUi(active);
+    setFullscreenUi(active, fullscreenMode);
   });
 
   document.addEventListener("keydown", (event) => {
@@ -239,7 +266,11 @@ import { url } from "@/utils/url-utils";
       return;
     }
     if (event.data?.type === "stickman:request-fullscreen") {
-      void enterGameFullscreen();
+      void enterGameFullscreen("mobile");
+      return;
+    }
+    if (event.data?.type === "stickman:request-desktop-fullscreen") {
+      void enterGameFullscreen("desktop");
       return;
     }
     if (event.data?.type === "stickman:game-over") {
@@ -373,7 +404,15 @@ import { url } from "@/utils/url-utils";
     letter-spacing: 0;
   }
 
-  #stickman-fullscreen-button {
+  .stickman-fullscreen-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  #stickman-desktop-fullscreen-button,
+  #stickman-mobile-fullscreen-button {
     min-width: 84px;
     border: 0;
     border-radius: 10px;
@@ -386,7 +425,8 @@ import { url } from "@/utils/url-utils";
     box-shadow: 0 10px 24px rgba(37, 99, 235, 0.24);
   }
 
-  #stickman-fullscreen-button:hover {
+  #stickman-desktop-fullscreen-button:hover,
+  #stickman-mobile-fullscreen-button:hover {
     filter: brightness(1.05);
   }
 
@@ -579,8 +619,15 @@ import { url } from "@/utils/url-utils";
     display: none !important;
   }
 
-  #stickman-game-shell:fullscreen #stickman-fullscreen-button,
-  #stickman-game-shell.is-game-fullscreen #stickman-fullscreen-button {
+  #stickman-game-shell:fullscreen .stickman-fullscreen-actions,
+  #stickman-game-shell.is-game-fullscreen .stickman-fullscreen-actions {
+    pointer-events: auto;
+  }
+
+  #stickman-game-shell:fullscreen #stickman-desktop-fullscreen-button,
+  #stickman-game-shell:fullscreen #stickman-mobile-fullscreen-button,
+  #stickman-game-shell.is-game-fullscreen #stickman-desktop-fullscreen-button,
+  #stickman-game-shell.is-game-fullscreen #stickman-mobile-fullscreen-button {
     min-width: auto;
     height: 34px;
     padding: 0 12px;
@@ -594,7 +641,7 @@ import { url } from "@/utils/url-utils";
   }
 
   #stickman-game-shell:fullscreen #stickman-game-frame,
-  #stickman-game-shell.is-game-fullscreen #stickman-game-frame {
+  #stickman-game-shell.is-game-fullscreen.is-mobile-fullscreen #stickman-game-frame {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -605,6 +652,17 @@ import { url } from "@/utils/url-utils";
     background: #020617;
     transform: translate(-50%, -50%) rotate(90deg);
     transform-origin: center;
+  }
+
+  #stickman-game-shell.is-game-fullscreen.is-desktop-fullscreen #stickman-game-frame {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    background: #020617;
+    transform: none;
   }
 
   @media (max-width: 820px) {

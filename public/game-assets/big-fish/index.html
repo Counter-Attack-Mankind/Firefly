@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>大鱼吃小鱼</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <section class="stage-panel" aria-label="大鱼吃小鱼">
+        <canvas id="gameCanvas" width="960" height="540"></canvas>
+        <div id="startOverlay" class="overlay is-active">
+          <div class="overlay-panel">
+            <p class="eyebrow">Ocean Hunt</p>
+            <h1>大鱼吃小鱼</h1>
+            <button id="startButton" type="button">开始</button>
+          </div>
+        </div>
+        <div id="gameOverOverlay" class="overlay">
+          <div class="overlay-panel">
+            <p class="eyebrow">Game Over</p>
+            <h1 id="finalScore">0</h1>
+            <button id="restartButton" type="button">再来一局</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="status-panel" aria-label="游戏状态">
+        <div class="metric-grid">
+          <div class="metric">
+            <span>分数</span>
+            <strong id="scoreText">0</strong>
+          </div>
+          <div class="metric">
+            <span>最大</span>
+            <strong id="bestText">0</strong>
+          </div>
+          <div class="metric">
+            <span>体型</span>
+            <strong id="sizeText">1.0x</strong>
+          </div>
+          <div class="metric">
+            <span>生命</span>
+            <strong id="lifeText">3</strong>
+          </div>
+        </div>
+
+        <section class="unlock-card" aria-label="解锁进度">
+          <div class="panel-heading">
+            <span>鱼谱</span>
+            <strong id="unlockText">银鳞鱼</strong>
+          </div>
+          <div class="progress-track">
+            <div id="unlockFill" class="progress-fill"></div>
+          </div>
+          <p id="unlockHint" class="hint">继续捕食，解锁新的海域目标。</p>
+        </section>
+
+        <ol id="fishDex" class="fish-dex" aria-label="已解锁鱼类"></ol>
+      </aside>
+    </main>
+
+    <script src="./game.js"></script>
+  </body>
+</html>
