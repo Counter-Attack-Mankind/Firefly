@@ -3,7 +3,7 @@ title: WSL 与 VS Code 配合开发 ROS 指南
 published: 2026-06-27
 description: 在 WSL 中创建 ROS catkin 工作空间，并用 VS Code 配置 C/C++ IntelliSense 与 CMakeLists.txt 的简明流程。
 image: /assets/posts/wsl-vscode-ros-guide/image1.png
-tags: [学习笔记, ROS, WSL, VS Code]
+tags: [学习笔记, ros, WSL, VS Code]
 category: 学习笔记
 draft: false
 ---
