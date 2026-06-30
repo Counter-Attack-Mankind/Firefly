@@ -19,6 +19,7 @@ const tutorialStoryButton = document.getElementById("tutorialStoryButton");
 const tutorialEndlessButton = document.getElementById("tutorialEndlessButton");
 const tutorialBackButton = document.getElementById("tutorialBackButton");
 const restartButton = document.getElementById("restartButton");
+const levelButtons = document.querySelectorAll("[data-level]");
 
 const tile = 24;
 const bestKey = "pixel_pacman_best_v2";
@@ -34,6 +35,7 @@ const keyToDir = {
 };
 const pressedCodes = new Set();
 let desiredDir = "right";
+const initialLives = 8;
 const startTile = { x: 1, y: 21 };
 const exitTile = { x: 26, y: 1 };
 const gateTiles = [
@@ -41,30 +43,107 @@ const gateTiles = [
   { x: 14, y: 10 },
 ];
 
-const rawMap = [
-  "############################",
-  "#............##............#",
-  "#.####.#####.##.#####.####.#",
-  "#o####.#####.##.#####.####o#",
-  "#.####.#####.##.#####.####.#",
-  "#..........................#",
-  "#.####.##.########.##.####.#",
-  "#......##....##....##......#",
-  "######.##### ## #####.######",
-  "     #.##          ##.#     ",
-  "######.## ###--### ##.######",
-  "      .   #      #   .      ",
-  "######.## ######## ##.######",
-  "     #.##          ##.#     ",
-  "######.## ######## ##.######",
-  "#............##............#",
-  "#.####.#####.##.#####.####.#",
-  "#o..##................##..o#",
-  "###.##.##.########.##.##.###",
-  "#......##....##....##......#",
-  "#.##########.##.##########.#",
-  "#..........................#",
-  "############################",
+const rawMaps = [
+  [
+    "############################",
+    "#............##............#",
+    "#.####.#####.##.#####.####.#",
+    "#o####.#####.##.#####.####o#",
+    "#.####.#####.##.#####.####.#",
+    "#..........................#",
+    "#.####.##.########.##.####.#",
+    "#......##....##....##......#",
+    "######.##### ## #####.######",
+    "     #.##          ##.#     ",
+    "######.## ###--### ##.######",
+    "      .   #      #   .      ",
+    "######.## ######## ##.######",
+    "     #.##          ##.#     ",
+    "######.## ######## ##.######",
+    "#............##............#",
+    "#.####.#####.##.#####.####.#",
+    "#o..##................##..o#",
+    "###.##.##.########.##.##.###",
+    "#......##....##....##......#",
+    "#.##########.##.##########.#",
+    "#..........................#",
+    "############################",
+  ],
+  [
+    "############################",
+    "#....o......##......o......#",
+    "#.####.#####.##.#####.####.#",
+    "#o####.##..........##.####o#",
+    "#.####.#####.##.#####.####.#",
+    "#..o.........##.........o..#",
+    "#.####.##.########.##.####.#",
+    "#......##....##....##......#",
+    "######.##.##....##.##.######",
+    "     #.##          ##.#     ",
+    "######.## ###--### ##.######",
+    "      .   #      #   .      ",
+    "######.## ######## ##.######",
+    "     #.##          ##.#     ",
+    "######.## ######## ##.######",
+    "#............##............#",
+    "#.####.#####.##.#####.####.#",
+    "#o..##....o....o....##..o..#",
+    "###.##.##.########.##.##.###",
+    "#......##....##....##......#",
+    "#.##.####.##....##.####.##.#",
+    "#......o............o......#",
+    "############################",
+  ],
+  [
+    "############################",
+    "#..####....##..##....####..#",
+    "#o....####........####....o#",
+    "#.##....##.######.##....##.#",
+    "#....##..............##....#",
+    "#.######.###....###.######.#",
+    "#............##............#",
+    "#.####.##....##....##.####.#",
+    "######.##....##....##.######",
+    "     #.##          ##.#     ",
+    "######.## ###--### ##.######",
+    "      .   #      #   .      ",
+    "######.## ######## ##.######",
+    "     #.##          ##.#     ",
+    "######.##....##....##.######",
+    "#.####.##....##....##.####.#",
+    "#............##............#",
+    "#o....####........####....o#",
+    "#.##....##.######.##....##.#",
+    "#....##..............##....#",
+    "#.######.###....###.######.#",
+    "#..........................#",
+    "############################",
+  ],
+  [
+    "############################",
+    "#o..........####..........o#",
+    "#.########..#..#..########.#",
+    "#....#................#....#",
+    "#.##.#.####.##.####.#.##...#",
+    "#.##.#......##......#.##...#",
+    "#....######....######....###",
+    "####......#.##.#........####",
+    "#....####.#.##.#.####......#",
+    "#.##.#.##          ##.#.##.#",
+    "#.##.#.## ###--### ##.#.##.#",
+    "#....#    #      #    #....#",
+    "#.##.#.## ######## ##.#.##.#",
+    "#.##.#.##          ##.#.##.#",
+    "#....####.#.##.#.####......#",
+    "####......#.##.#........####",
+    "#....######....######....###",
+    "#.##.#......##......#.##...#",
+    "#.##.#.####.##.####.#.##...#",
+    "#....#................#....#",
+    "#.########..#..#..########.#",
+    "#o..........####..........o#",
+    "############################",
+  ],
 ];
 
 const dirs = {
@@ -88,8 +167,9 @@ const state = {
   ended: false,
   score: 0,
   best: Number(localStorage.getItem(bestKey) || 0),
-  lives: 3,
+  lives: initialLives,
   level: 1,
+  startLevel: 1,
   mode: "story",
   nextEndlessGhostScore: 1000,
   fright: 0,
@@ -159,8 +239,12 @@ function pixel(tilePos) {
   return tilePos * tile + tile / 2;
 }
 
+function currentRawMap() {
+  return rawMaps[(state.level - 1) % rawMaps.length];
+}
+
 function resetLevel(keepProgress = true) {
-  state.map = rawMap.map((row) => row.split(""));
+  state.map = currentRawMap().map((row) => row.split(""));
   state.map[startTile.y][startTile.x] = " ";
   state.map[exitTile.y][exitTile.x] = " ";
   state.dotsLeft = 0;
@@ -188,7 +272,7 @@ function resetLevel(keepProgress = true) {
   if (!keepProgress) {
     state.score = 0;
     state.level = 1;
-    state.lives = 3;
+    state.lives = initialLives;
   }
 }
 
@@ -214,16 +298,18 @@ function ghostSpeed() {
   return playerSpeed() * 0.8;
 }
 
-function startGame(mode = "story") {
+function startGame(mode = "story", startLevel = 1) {
   ensureAudio();
+  const level = Math.min(rawMaps.length, Math.max(1, Number(startLevel) || 1));
   pressedCodes.clear();
   desiredDir = "right";
   state.running = true;
   state.ended = false;
   state.mode = mode;
+  state.startLevel = mode === "story" ? level : 1;
   state.score = 0;
-  state.level = 1;
-  state.lives = 3;
+  state.level = state.startLevel;
+  state.lives = initialLives;
   state.nextEndlessGhostScore = 1000;
   resetLevel(true);
   startOverlay.classList.remove("is-active");
@@ -280,7 +366,7 @@ function advanceMover(mover, dt) {
 
 function updatePac(dt) {
   const arrived = advanceMover(state.pac, dt);
-  state.pac.mouth += dt * 12;
+  state.pac.mouth += dt * (state.pac.moving ? 18 : 8);
   if (arrived) {
     eatDot();
     checkExitDoor();
@@ -596,13 +682,21 @@ function drawPac() {
   const pac = state.pac;
   const dir = dirs[pac.dir];
   const angle = dir.angle;
-  const open = 0.16 + Math.abs(Math.sin(pac.mouth)) * 0.18;
+  const bite = Math.abs(Math.sin(pac.mouth));
+  const open = 0.04 + bite * (pac.moving ? 0.42 : 0.18);
+  const radius = tile * 0.44;
   ctx.fillStyle = "#ffe95b";
   ctx.beginPath();
   ctx.moveTo(pac.x, pac.y);
-  ctx.arc(pac.x, pac.y, tile * 0.44, angle + open, angle + Math.PI * 2 - open);
+  ctx.arc(pac.x, pac.y, radius, angle + open, angle + Math.PI * 2 - open);
   ctx.closePath();
   ctx.fill();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(pac.x - 3, pac.y - 4, radius * 0.42, Math.PI * 1.05, Math.PI * 1.75);
+  ctx.stroke();
 
   const eyeOffsets = {
     right: { x: 4, y: -5 },
@@ -699,7 +793,10 @@ tutorialBackButton.addEventListener("click", () => {
   tutorialOverlay.classList.remove("is-active");
   startOverlay.classList.add("is-active");
 });
-restartButton.addEventListener("click", () => startGame(state.mode));
+levelButtons.forEach((button) => {
+  button.addEventListener("click", () => startGame("story", button.dataset.level));
+});
+restartButton.addEventListener("click", () => startGame(state.mode, state.startLevel));
 
 resetLevel(false);
 updateHud();

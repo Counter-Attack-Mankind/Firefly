@@ -3,8 +3,8 @@ title: ROS NodeHandle 句柄与命名空间用法
 published: 2026-06-27
 description: 记录 ros::NodeHandle 的作用、命名空间解析方式，以及在多机器人场景中创建 Publisher 和 Timer 的示例。
 image: /assets/posts/ros-nodehandle-guide/image1.png
-tags: [学习笔记, ros, NodeHandle, C++]
-category: 学习笔记
+tags: [ROS 学习, ros, NodeHandle, C++]
+category: ROS 学习
 draft: false
 ---
 

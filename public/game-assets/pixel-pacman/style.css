@@ -182,6 +182,23 @@ button {
   width: 100%;
 }
 
+.level-select {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.level-select button {
+  min-width: 0;
+  height: 38px;
+  border-color: #7dfdff;
+  background: #11184d;
+  color: #ffe95b;
+  font-size: 0.78rem;
+  box-shadow: 3px 3px 0 #1bd7ff;
+}
+
 .tutorial-panel {
   width: min(560px, calc(100% - 32px));
   text-align: left;
@@ -223,6 +240,10 @@ button {
   }
 
   .hud-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .level-select {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
