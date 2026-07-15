@@ -1,36 +1,34 @@
-# 关于我 / About Me
+# 娄晟杰
 
-你好！我是 **罗潮生** ，华东师范大学研0，致力于轨迹规划、最优控制等方面。
+> **Shengjie Lou**  ·  华东师范大学硕士研究生
 
-## 🛠️ 关于本站
+我于 2026 年获南京信息工程大学自动化学院机器人工程专业工学学士学位，现于华东师范大学攻读通信与信息系统专业硕士学位。
 
-这个网站使用 **Astro** 框架构建，采用了 [Firefly](https://github.com/CuteLeaf/Firefly) 模板，Firefly 是基于 [Fuwari](https://github.com/saicaca/fuwari) 的二次开发。
+我的研究工作聚焦于自主系统的决策、控制与运动规划，主要研究兴趣包括**计算最优控制**与**自动驾驶车辆轨迹规划**。
 
-**Firefly** 是一款基于 Astro 框架和 Fuwari 模板开发的清新美观且现代化个人博客主题模板，专为技术爱好者和内容创作者设计。该主题融合了现代 Web 技术栈，提供了丰富的功能模块和高度可定制的界面，让您能够轻松打造出专业且美观的个人博客网站。
+## 教育经历
 
+### 华东师范大学
 
-**🖥️在线预览： [Firefly - Demo site](https://firefly.cuteleaf.cn/)**
+**通信与信息系统 · 硕士研究生** · 中国，上海
 
-**🏠我的博客： [https://blog.cuteleaf.cn](https://blog.cuteleaf.cn/)**
+### 南京信息工程大学
 
-**📝Firefly使用文档： [https://docs-firefly.cuteleaf.cn](https://docs-firefly.cuteleaf.cn/)**
+**机器人工程 · 工学学士** · 自动化学院，中国，南京 · 2026
 
-**⭐Firefly开源地址：[https://github.com/CuteLeaf/Firefly](https://github.com/CuteLeaf/Firefly)** 
+## 荣誉与奖励
 
-**⭐Fuwari开源地址：[https://github.com/saicaca/fuwari](https://github.com/saicaca/fuwari)**
+- **全国一等奖**，第七届中国高校智能机器人创意大赛，2024
+- **全国一等奖**，睿抗机器人开发者大赛（RAICOM）城市安全赛道，2024
 
-::github{repo="CuteLeaf/Firefly"}
+## 研究方向
 
-::github{repo="saicaca/fuwari"}
+- **计算最优控制**：面向复杂动态系统的数值优化与最优控制方法
+- **轨迹规划**：面向自动驾驶车辆的安全、高效轨迹生成与优化
 
+## 联系方式
 
-## 📫 联系方式
+欢迎就学术研究与技术问题进行交流。
 
-如果你想和我交流技术问题，分享有趣的想法，或者只是想打个招呼，欢迎通过以下方式联系我：
-
-- ✉️ **Email**: [loushengjie527@gmail.com](loushengjie527@gmail.com)
-
----
-
-*感谢你的来访！希望在这里能找到对你有用的内容！*
+- **Email**：[loushengjie527@gmail.com](mailto:loushengjie527@gmail.com)
 
