@@ -30,5 +30,5 @@
 
 欢迎就学术研究与技术问题进行交流。
 
-- **Email**：[loushengjie527@gmail.com](mailto:loushengjie527@gmail.com)
+- **Email**：[sj_lou@stu.ecnu.edu.cn](mailto:sj_lou@stu.ecnu.edu.cn)
 
