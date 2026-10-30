@@ -1,18 +1,19 @@
+import { readFileSync } from "node:fs";
 import { h } from "hastscript";
 import { visit } from "unist-util-visit";
-import plantumlRenderScript from "./plantuml-render-script.js?raw";
+import {
+	DIAGRAM_CONTAINER,
+	DIAGRAM_WRAPPER,
+	PLANTUML_CONTAINER,
+	PLANTUML_IMAGE,
+	PLANTUML_WRAPPER,
+} from "./utils/diagramConstants.js";
+import { extractText } from "./utils/extractText.js";
 
-/**
- * 从 HAST 节点递归提取所有文本内容，作为 `<img>` 的 alt 回退文案。
- *
- * @param {import('hast').Node} node 节点
- * @returns {string} 拼接后的文本
- */
-function extractText(node) {
-	if (node.type === "text") return node.value || "";
-	if (node.children) return node.children.map(extractText).join("");
-	return "";
-}
+const plantumlThemeScript = readFileSync(
+	new URL("./plantuml-theme-switch.js", import.meta.url),
+	"utf8",
+);
 
 /**
  * 生成当前 HAST 节点的随机 id，避免同一页多个图表冲突。
@@ -75,7 +76,7 @@ export function rehypePlantuml() {
 			const diagramId = generateId();
 
 			const img = h("img", {
-				class: "plantuml-image",
+				class: PLANTUML_IMAGE,
 				alt: altText || "PlantUML diagram",
 				src: lightSrc,
 				"data-light-src": lightSrc,
@@ -87,14 +88,15 @@ export function rehypePlantuml() {
 			const wrapper = h(
 				"div",
 				{
-					class: "plantuml-wrapper",
+					class: `${DIAGRAM_WRAPPER} ${PLANTUML_WRAPPER}`,
 					id: diagramId,
 				},
 				[img],
 			);
 
-			node.tagName = "div";
-			node.properties = { class: "plantuml-diagram-container" };
+			node.properties = {
+				class: `${DIAGRAM_CONTAINER} ${PLANTUML_CONTAINER}`,
+			};
 			node.children = [wrapper];
 
 			foundAny = true;
@@ -105,7 +107,7 @@ export function rehypePlantuml() {
 			const script = h(
 				"script",
 				{ type: "text/javascript" },
-				plantumlRenderScript,
+				plantumlThemeScript,
 			);
 			tree.children = [...(tree.children || []), script];
 		}

@@ -1,5 +1,5 @@
-import { coverImageConfig } from "../config/coverImageConfig";
-import { siteConfig } from "../config/siteConfig";
+import { coverImageConfig } from "../config/coverImageConfig.ts";
+import { siteConfig } from "../config/siteConfig.ts";
 import type { ImageFormat } from "../types/config";
 
 const { randomCoverImage } = coverImageConfig;
@@ -115,7 +115,9 @@ export function shouldAddNoReferrer(urlStr: string): boolean {
 	try {
 		const hostname = new URL(urlStr).hostname;
 		return domains.some((pattern) => {
-			const regexPattern = pattern.replace(/\./g, "\\.").replace(/\*/g, ".*");
+			// 先完整转义正则元字符，再把用户写的 * 通配符还原为 .*
+			const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			const regexPattern = escaped.replace(/\\\*/g, ".*");
 			return new RegExp(`^${regexPattern}$`).test(hostname);
 		});
 	} catch {
