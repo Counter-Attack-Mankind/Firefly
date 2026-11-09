@@ -1,6 +1,6 @@
 ---
 title: C++ 学习笔记 08：class、成员函数与封装设计
-published: 2026-11-09
+published: 2026-11-08T8:00:00+08:00
 description: 学习 C++ 普通函数与成员函数的区别、struct 与 class、public 和 private、const 成员函数及类外定义，并通过 TrajectoryManager 实践轨迹数据的封装与接口设计。
 tags: [C++ 学习, C++, class, 封装, 成员函数]
 category: C++ 学习
