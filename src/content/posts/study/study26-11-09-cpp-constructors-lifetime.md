@@ -1,6 +1,6 @@
 ---
 title: C++ 学习笔记 09：构造函数、初始化列表与对象生命周期
-published: 2026-11-09
+published: 2026-11-09T17:00:00+08:00
 description: 系统学习 C++ 构造函数重载、成员初始化列表、默认构造、默认成员初始化器、对象生命周期、析构函数和 RAII，并完善 TrajectoryManager 的初始化设计。
 tags: [C++ 学习, C++, 构造函数, 对象生命周期, RAII]
 category: C++ 学习
